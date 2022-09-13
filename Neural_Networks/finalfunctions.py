@@ -36,7 +36,7 @@ class Final():
         ########################### Starting Forward Prop ###########################
 
         if kth != 0:
-            w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,dw,db,dw1,db1,1)
+            w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,dw,db,dw1,db1,0.01)
 
 
         l0tol1nect = Fullcycle.inductivedotproductl0tol1(w,b,realarr)   #position  = Fullcycle.RELU (randomarr) # for position purposes
@@ -70,10 +70,11 @@ class Final():
         crossentr = Fullcycle.Cross_entropy(correctlabel,sftmax) # array,labeltarget # Cross entropy on Softmax
         
         lowcost=Fullcycle.maxcrossentropy() # NEEDED FOR MAX
-        #print (f'CROSS ENTROPY::::: {Fullcycle.maxcrossentropy()}')
+        print (f'CROSS ENTROPY::::: {Fullcycle.maxcrossentropy()}')
 
         actispred,Y,Ypred,correctpred = Fullcycle.Probability(correctlabel)
-        #!print (f'\nCORRECT LABEL::: {Y}  PREDICTED LABEL:::  {Ypred}  Probability Of Correct Label :::  {correctpred * 100} %\n')
+        #!
+        print (f'\nCORRECT LABEL::: {Y}  PREDICTED LABEL:::  {Ypred}  Probability Of Correct Label :::  {correctpred * 100} %\n')
 
         if actispred==True :
             print ('   BASE::::  SYS.EXIT: ACCURATE == PREDICTED   TRUE     \n')
