@@ -44,13 +44,18 @@ class EpochCycle():
     def updatewandb(self,w,b,w1,b1,dw,db,dw1,db1,learnrate):
     
 
-        newprimel0w = w#w - (dw * learnrate) #dw - (w * learnrate)
-        newprimel0b = b# db #db - (b * learnrate)
+        newprimel0w = w - (dw * learnrate) 
+        newprimel0b = b - (db * learnrate)
         
-        newprimel1w =  w1 #dw1 - (w1 * learnrate) 
-        newprimel1b =  b1#[0] #db1 - (b1 * learnrate)
+        newprimel1w = w1 - (dw1 * learnrate) 
 
-        print (newprimel0w, "i greater than 0   ")
+
+        newprimel1b = b1- (db1 * learnrate)
+
+        #print ("\nthis one ",newprimel1w, "i=1  ")
+
+        # b is lessrandom. and 
+
         #print (b, "first  B")
         #print (w1, "first  W1")
         #print (b1, "first B1")
@@ -380,25 +385,29 @@ class EpochCycle():
 
     def newweightl2tol1 (self,loss,softderiv, reluapplied, kth): # also reluapplied but that is self.output
 
-        inductPROD  = loss * reluapplied * softderiv * 1/(kth + 1) # 10 *   10,10  * 10  =  10,10 
 
+        inductPROD  = reluapplied.reshape(1,10) @ softderiv 
+        inductPROD = inductPROD.reshape(10,1)
+        inductPROD = inductPROD @ loss.reshape(1,10) * 1/(kth + 1) # # 10 *   10,10  * 10  =  10,10 
+
+
+        # SOMETHING IS GOING ON. 
         return inductPROD  
 
 
     def newbiasl2tol1 (self,loss,softderiv, kth):
         
-        baccumulator  = loss @ softderiv 
-        baccumulator = baccumulator.reshape(1,10)[0] * 1/(kth+1)
+        baccumulator  = loss.reshape(1,10) @ softderiv 
+        baccumulator = baccumulator[0] * 1/(kth+1)
 
         return baccumulator
 
     
     def newweightl1tol0(self,loss,drelu,pixels, kth ):#(self,nxtchainrule, PIXELS):
 
-        #!print (f"new drelu{drelu}")
-        
-        lossdrelu = drelu.reshape(1,10) @ loss.reshape(10,1) @ pixels.reshape(1,784)
-        newweightsl1tol0 = drelu.reshape(10,1) @ lossdrelu * 1/(kth+1) # 10 x 1  *  10 * 784
+        lossdrelu = drelu.reshape(1,10) @ loss.reshape(10,1) # 1 
+        variable = drelu.reshape(10,1) @ pixels.reshape (1,784) # 10 x 784
+        newweightsl1tol0 = lossdrelu * variable * 1/(kth+1)
 
         return newweightsl1tol0
 
@@ -406,11 +415,8 @@ class EpochCycle():
 
         #!print (f"newer drelu{drelu}")
         #print (f"newer drelu{drelu}")
-
-
-        biasesl1tol0 = loss.reshape(10,1) @ drelu.reshape(1,10) @ drelu.reshape(10,1)
+        dloss = loss.reshape(1,10) @ drelu.reshape(10,1)
+        biasesl1tol0 = dloss * drelu.reshape(10,1)
         biasesl1tol0 = biasesl1tol0.reshape(1,10)[0] * 1/(kth+1)
         
-        #print ("biasesl1tol0",biasesl1tol0)
-
         return biasesl1tol0
