@@ -46,14 +46,10 @@ class EpochCycle():
 
         newprimel0w = w - (dw * learnrate) 
         newprimel0b = b - (db * learnrate)
-        
         newprimel1w = w1 - (dw1 * learnrate) 
-
-
         newprimel1b = b1- (db1 * learnrate)
 
-        #print ("\nthis one ",newprimel1w, "i=1  ")
-
+        #print ("\nthis one ",b, "i=1  ")
         # b is lessrandom. and 
 
         #print (b, "first  B")
@@ -71,10 +67,11 @@ class EpochCycle():
     def inductivedotproductl0tol1 (self, inductweights, inductbiases, arrayofpixels):
         
         npinsertarr = arrayofpixels.reshape(784,1) # reduced this was next line : npinsertarr = npinsertarr.reshape(784,1)
-        
+
         #! change mutliplication to dot because it isnt supposed to just get multiplied 
-        weightwithbias = np.dot (inductweights, npinsertarr) + inductbiases.reshape (10,1) # maybe inductweights @ npinsertarr instead of dot. 
+        weightwithbias = np.dot (inductweights, npinsertarr) + inductbiases # maybe inductweights @ npinsertarr instead of dot. 
         
+        #print (inductbiases )
         inductivebeforeRelu = weightwithbias.reshape(10) #.tolist()
 
         return inductivebeforeRelu
@@ -235,7 +232,7 @@ class EpochCycle():
     def inductivedotproductl1tol2 (self, inductweightsl1, inductbiasesl1):
         
         npinsertarr = np.array(self.output).reshape(10,1) # reduced this was next line : npinsertarr = npinsertarr.reshape(784,1)       
-        inductiveAFTERRelu = (np.dot (inductweightsl1, npinsertarr) ) + inductbiasesl1.reshape (10,1) 
+        inductiveAFTERRelu = (np.dot (inductweightsl1, npinsertarr) ) + inductbiasesl1
         #inductiveAFTERRelu = inductiveAFTERRelu#.reshape(10)
         #print (f'inductiveAFTERRelu::{inductiveAFTERRelu}' )
 
@@ -264,7 +261,8 @@ class EpochCycle():
         #    self.nextimage = True
     #!######################################################################
         self.softmaxlist = self.softmaxlist.reshape(1,10)[0] 
-        #!print (f'Softmax: {self.softmaxlist}')
+        #!
+        print (f'Softmax: {self.softmaxlist}')
 
 
         return self.softmaxlist
@@ -381,6 +379,8 @@ class EpochCycle():
 
         loss = crossder @ softpartials 
 
+        print (f"cechain = {loss}")
+
         return loss 
 
     def newweightl2tol1 (self,loss,softderiv, reluapplied, kth): # also reluapplied but that is self.output
@@ -398,10 +398,9 @@ class EpochCycle():
     def newbiasl2tol1 (self,loss,softderiv, kth):
         
         baccumulator  = loss.reshape(1,10) @ softderiv 
-        baccumulator = baccumulator[0] * 1/(kth+1)
+        baccumulator = baccumulator.reshape(10,1) * 1/(kth+1)
 
         return baccumulator
-
     
     def newweightl1tol0(self,loss,drelu,pixels, kth ):#(self,nxtchainrule, PIXELS):
 
@@ -417,6 +416,6 @@ class EpochCycle():
         #print (f"newer drelu{drelu}")
         dloss = loss.reshape(1,10) @ drelu.reshape(10,1)
         biasesl1tol0 = dloss * drelu.reshape(10,1)
-        biasesl1tol0 = biasesl1tol0.reshape(1,10)[0] * 1/(kth+1)
+        biasesl1tol0 = biasesl1tol0.reshape(10,1) * 1/(kth+1)
         
         return biasesl1tol0
