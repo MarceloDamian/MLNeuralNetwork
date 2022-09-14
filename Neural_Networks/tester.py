@@ -8,17 +8,19 @@ import random
 
 loop = ff.Final()  # calls class epoch cycle
 
+# change weights and biases and everything else. 
 
-np.random.seed (0)
-w = np.random.uniform(size=(10,784),low = -1.5, high= 1.5) * np.sqrt(2 / 784) #maybe change to -1 as low 
+
+np.random.seed (0)  # size(sets, nodes)
+w = np.random.uniform(size=(10,784),low = -1, high= 1) * np.sqrt(2 / 784) #maybe change to -1 as low 
 np.random.seed(0)
-b = np.random.uniform(size=(1,10),low = -1, high= 1)[0] * np.sqrt(2 / 10)  # very small biases
+b = np.random.uniform(size=(10,1),low = -1, high= 1) * np.sqrt(2 / 10)  # very small biases
 
 ############################################################################################
 np.random.seed (1)
-w1 = np.random.uniform(size=(10,10),low = -1.5, high= 1.5) * np.sqrt(2 / 10)#maybe change to -1 as low 
+w1 = np.random.uniform(size=(10,10),low = -1, high= 1) * np.sqrt(2 / 10)#maybe change to -1 as low 
 np.random.seed(1)
-b1 = np.random.uniform(size=(1,10),low = -1, high= 1)[0] * np.sqrt(2 / 10) # very small biases
+b1 = np.random.uniform(size=(10,1),low = -1, high= 1) * np.sqrt(2 / 10) # very small biases
 
 #############################################################################################
 
@@ -33,10 +35,12 @@ db1 = np.zeros((1,10))[0]
 flag = False
 accuratepredictions = 0
 
-for k in range(0,20): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
+for k in range(0,2): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
 
     tf,it,w0,b0,wl1,bl1,nw,nb,nw1,nb1 = loop.inductiveloop(flag,k,w,b,w1,b1,dw,db,dw1,db1) # a = b            
     flag,k,w,b,w1,b1,dw,db,dw1,db1 = tf,it,w0,b0,wl1,bl1,nw,nb,nw1,nb1
+    
+
 
     #print (f"\ni:{k} b::::::::::::::::::::::;;    {nb} ")
     #print (F"WEIGHTS l0 TO L1 : {wdeltal0}\n BIASES l0 TO L1 : {bdeltal0}\n ")
