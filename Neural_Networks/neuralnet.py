@@ -38,32 +38,6 @@ class EpochCycle():
     def randomsum(self, randomarray):
         return np.sum (randomarray)
 
-
-    #! FIX UDPDATED LEARNING ALL OF THEM.  REVIEW GRADIENT DESCENT. 
-
-    def updatewandb(self,w,b,w1,b1,dw,db,dw1,db1,learnrate):
-    
-
-        newprimel0w = w - (dw * learnrate) 
-        newprimel0b = b - (db * learnrate)
-        newprimel1w = w1 - (dw1 * learnrate) 
-        newprimel1b = b1- (db1 * learnrate)
-
-        #print ("\nthis one ",b, "i=1  ")
-        # b is lessrandom. and 
-
-        #print (b, "first  B")
-        #print (w1, "first  W1")
-        #print (b1, "first B1")
-        
-        #print (dw, "first DW")
-        #print (db, "first DB")
-        #print (dw1, "first DW1")
-        #print (db1, "first DB1")
-
-            
-        return newprimel0w,newprimel0b,newprimel1w,newprimel1b
-
     def inductivedotproductl0tol1 (self, inductweights, inductbiases, arrayofpixels):
         
         npinsertarr = arrayofpixels.reshape(784,1) # reduced this was next line : npinsertarr = npinsertarr.reshape(784,1)
@@ -71,8 +45,8 @@ class EpochCycle():
         #! change mutliplication to dot because it isnt supposed to just get multiplied 
         weightwithbias = np.dot (inductweights, npinsertarr) + inductbiases # maybe inductweights @ npinsertarr instead of dot. 
         
-        #print (inductbiases )
-        inductivebeforeRelu = weightwithbias.reshape(10) #.tolist()
+        #print (weightwithbias )
+        inductivebeforeRelu = weightwithbias.reshape(533) #.tolist()
 
         return inductivebeforeRelu
 
@@ -231,7 +205,8 @@ class EpochCycle():
     
     def inductivedotproductl1tol2 (self, inductweightsl1, inductbiasesl1):
         
-        npinsertarr = np.array(self.output).reshape(10,1) # reduced this was next line : npinsertarr = npinsertarr.reshape(784,1)       
+        npinsertarr = np.array(self.output).reshape(533,1) # reduced this was next line : npinsertarr = npinsertarr.reshape(784,1)       
+        inductweightsl1 = inductweightsl1.reshape (10,533) #! added
         inductiveAFTERRelu = (np.dot (inductweightsl1, npinsertarr) ) + inductbiasesl1
         #inductiveAFTERRelu = inductiveAFTERRelu#.reshape(10)
         #print (f'inductiveAFTERRelu::{inductiveAFTERRelu}' )
@@ -261,8 +236,7 @@ class EpochCycle():
         #    self.nextimage = True
     #!######################################################################
         self.softmaxlist = self.softmaxlist.reshape(1,10)[0] 
-        #!
-        print (f'Softmax: {self.softmaxlist}')
+        #!print (f'Softmax: {self.softmaxlist}')
 
 
         return self.softmaxlist
@@ -379,17 +353,15 @@ class EpochCycle():
 
         loss = crossder @ softpartials 
 
-        print (f"cechain = {loss}")
+        #print (f"cechain = {loss}")
 
         return loss 
 
     def newweightl2tol1 (self,loss,softderiv, reluapplied, kth): # also reluapplied but that is self.output
 
-
-        inductPROD  = reluapplied.reshape(1,10) @ softderiv 
-        inductPROD = inductPROD.reshape(10,1)
-        inductPROD = inductPROD @ loss.reshape(1,10) * 1/(kth + 1) # # 10 *   10,10  * 10  =  10,10 
-
+        #print (loss.shape)
+        inductPROD  = loss.reshape(1,10) @ softderiv 
+        inductPROD = reluapplied.reshape(533,1) @ inductPROD.reshape(1,10)* 1/(kth + 1) # # 10 *   10,10  * 10  =  10,10 
 
         # SOMETHING IS GOING ON. 
         return inductPROD  
@@ -402,11 +374,13 @@ class EpochCycle():
 
         return baccumulator
     
-    def newweightl1tol0(self,loss,drelu,pixels, kth ):#(self,nxtchainrule, PIXELS):
+    def newweightl1tol0(self,loss,drelu,pixels,ogweights, kth ):#(self,nxtchainrule, PIXELS):
 
-        lossdrelu = drelu.reshape(1,10) @ loss.reshape(10,1) # 1 
-        variable = drelu.reshape(10,1) @ pixels.reshape (1,784) # 10 x 784
-        newweightsl1tol0 = lossdrelu * variable * 1/(kth+1)
+        lossdrelu = drelu.reshape(533,1) @ loss.reshape(1,10)  # 533 x 10 
+        variable = drelu.reshape(533,1) @ pixels.reshape (1,784) # 533 x 784   #   533 x 10  10 x 533 x 533 x 784
+        variableandloss = lossdrelu.reshape(533, 10)  @  ogweights.reshape(10,533)#variable.reshape (533,784) 
+
+        newweightsl1tol0 = variableandloss.reshape(533,533) @ variable.reshape(533,784) * 1/(kth+1)
 
         return newweightsl1tol0
 
@@ -414,8 +388,41 @@ class EpochCycle():
 
         #!print (f"newer drelu{drelu}")
         #print (f"newer drelu{drelu}")
-        dloss = loss.reshape(1,10) @ drelu.reshape(10,1)
-        biasesl1tol0 = dloss * drelu.reshape(10,1)
-        biasesl1tol0 = biasesl1tol0.reshape(10,1) * 1/(kth+1)
+        dloss = loss.reshape(10,1) @ drelu.reshape(1,533)
+        biasesl1tol0 = drelu.reshape(533,1) * 1/(kth+1)
+
+        #print (biasesl1tol0.shape)
         
         return biasesl1tol0
+
+        #! FIX UDPDATED LEARNING ALL OF THEM.  REVIEW GRADIENT DESCENT. 
+
+    def updatewandb(self,w,b,w1,b1,nw,nb,nw1,nb1,learnrate):
+     
+        #print (nb, "nbshape", nb.shape)
+
+        ####### Very Volatile
+        #neww = w + (nw * learnrate) 
+        #newb = b + (nb * learnrate)#b - (nb * learnrate)
+        #neww1 = w1 + (nw1 * learnrate) #w1 - (nw1 * learnrate) 
+        #newb1 = b1 + (nb1 * learnrate)#b1 - (nb1 * learnrate)
+    
+        ####### Yeilds 15 percent. @ 0.01 also yeilds 15 percent at 0.001. STABLE.
+        neww = w - (nw * learnrate) 
+        newb = b - (nb * learnrate)#b - (nb * learnrate)
+        neww1 = w1 - (nw1 * learnrate) #w1 - (nw1 * learnrate) 
+        newb1 = b1 - (nb1 * learnrate)#b1 - (nb1 * learnrate)
+
+        #print ("\nthis one ",b, "i=1  ")
+        # b is lessrandom. and 
+        #print (w, "first  W")
+        #print (b, "first  B")
+        #print (w1, "first  W1")
+        #print (b1, "first B1")
+        #print (dw, "first DW")
+        #print (db, "first DB")
+        #print (dw1, "first DW1")
+        #print (db1, "first DB1")
+
+            
+        return neww,newb,neww1,newb1
