@@ -374,22 +374,23 @@ class EpochCycle():
 
         return baccumulator
     
-    def newweightl1tol0(self,loss,drelu,pixels,ogweights, kth ):#(self,nxtchainrule, PIXELS):
+    def newweightl1tol0(self,loss,drelu,pixels,prevweightl1, kth ):#(self,nxtchainrule, PIXELS):
 
         lossdrelu = drelu.reshape(533,1) @ loss.reshape(1,10)  # 533 x 10 
         variable = drelu.reshape(533,1) @ pixels.reshape (1,784) # 533 x 784   #   533 x 10  10 x 533 x 533 x 784
-        variableandloss = lossdrelu.reshape(533, 10)  @  ogweights.reshape(10,533)#variable.reshape (533,784) 
+        variableandloss = lossdrelu.reshape(533, 10)  @  prevweightl1.reshape(10,533)#variable.reshape (533,784) 
 
         newweightsl1tol0 = variableandloss.reshape(533,533) @ variable.reshape(533,784) * 1/(kth+1)
 
         return newweightsl1tol0
 
-    def newbiasl1tol0 (self, loss, drelu, kth):
+    def newbiasl1tol0 (self, loss, drelu, prevbiasb1, kth):
 
         #!print (f"newer drelu{drelu}")
         #print (f"newer drelu{drelu}")
         dloss = loss.reshape(10,1) @ drelu.reshape(1,533)
-        biasesl1tol0 = drelu.reshape(533,1) * 1/(kth+1)
+        biasesl1tol0 = dloss.reshape(533,10) @ prevbiasb1.reshape(10,1) 
+        biasesl1tol0 = biasesl1tol0 * 1/(kth+1)
 
         #print (biasesl1tol0.shape)
         
@@ -407,7 +408,7 @@ class EpochCycle():
         #neww1 = w1 + (nw1 * learnrate) #w1 - (nw1 * learnrate) 
         #newb1 = b1 + (nb1 * learnrate)#b1 - (nb1 * learnrate)
     
-        ####### Yeilds 15 percent. @ 0.01 also yeilds 15 percent at 0.001. STABLE.
+        ####### Yeilds 20 percent. STABLE.
         neww = w - (nw * learnrate) 
         newb = b - (nb * learnrate)#b - (nb * learnrate)
         neww1 = w1 - (nw1 * learnrate) #w1 - (nw1 * learnrate) 
