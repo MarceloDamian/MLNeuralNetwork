@@ -8,7 +8,7 @@ import sys
 class Final():
 
 
-    def inductiveloop(self,flagbool,kth,w,b,w1,b1,dw,db,dw1,db1): # add a k for iterations.
+    def inductiveloop(self,flagbool,kth,w,b,w1,b1):   #,dw,db,dw1,db1): # add a k for iterations.
 
         #print (w, "first w ")
         #print (b, "first  B")
@@ -23,10 +23,6 @@ class Final():
 
         # THESE ARE 0 in the first iteration dw,db,dw1,db1
 
-
-
-
-
         ######### initalizing data  #################
         Fullcycle= nn.EpochCycle()  # calls class epoch cycle
         realarr = Fullcycle.replacewithrealarray(kth) #(3)# read all 42000. For loop. Gets data from index 4 
@@ -34,13 +30,6 @@ class Final():
         correctlabel = Fullcycle.accuratelabel()
         
         ########################### Starting Forward Prop ###########################
-
-
-
-        if kth != 0:
-            w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,dw,db,dw1,db1,0.01)
-
-        #print (b , "b")
 
         l0tol1nect = Fullcycle.inductivedotproductl0tol1(w,b,realarr)   #position  = Fullcycle.RELU (randomarr) # for position purposes
           
@@ -58,11 +47,6 @@ class Final():
         badimg = Fullcycle.explodedgradientresolved() # ? Perhaps not needed
     
 
-
-
-
-
-
         ######## going backwards and updating dw1, db1, dw, db ##########
 
 
@@ -71,9 +55,9 @@ class Final():
         sfthotencode = Fullcycle.SoftmaxHotencode(sftmax) 
            
         crossentr = Fullcycle.Cross_entropy(correctlabel,sftmax) # array,labeltarget # Cross entropy on Softmax
-        
+
         lowcost=Fullcycle.maxcrossentropy() # NEEDED FOR MAX
-        #print (f'CROSS ENTROPY::::: {Fullcycle.maxcrossentropy()}')
+        print (f'CROSS ENTROPY::::: {Fullcycle.maxcrossentropy()}')
 
         actispred,Y,Ypred,correctpred = Fullcycle.Probability(correctlabel)
         #!
@@ -86,29 +70,26 @@ class Final():
 
 
 
-
-
         crossderive = Fullcycle.CEntropyderivative(correctlabel,sftmax)  # array,labeltarget # Cross entropy derivative 
         
         chainsoftcross = Fullcycle.CEntropywithsoftchainrule(crossderive,sftgrad) # Cross entropy & Softmax Chain Rule derivative
-                
+        
+        nw1 =  Fullcycle.newweightl2tol1(chainsoftcross,sftgrad, reludone, kth) # New weights l2 to l1
+        nb1 =  Fullcycle.newbiasl2tol1(chainsoftcross,sftgrad, kth) # New bias l2 to l1
 
-        
-        dw1 =  Fullcycle.newweightl2tol1(chainsoftcross,sftgrad, reludone, kth) # New weights l2 to l1
-        db1 =  Fullcycle.newbiasl2tol1(chainsoftcross,sftgrad, kth) # New bias l2 to l1
-
-        dw =  Fullcycle.newweightl1tol0(chainsoftcross,derivrelu,realarr, kth)  # New weights l1 to l0 
-        db =  Fullcycle.newbiasl1tol0(chainsoftcross,derivrelu, kth)   # New bises l1 to l0 
-        
-        
+        nw =  Fullcycle.newweightl1tol0(chainsoftcross,derivrelu,realarr,w1, kth)  # New weights l1 to l0 
+        nb =  Fullcycle.newbiasl1tol0(chainsoftcross,derivrelu, kth)   # New bises l1 to l0 
+        #print (nb , "New bias")
+    
         
         ########################## Finishing Backward Prop ############################################
+            
+        #print (nb)
+        #print (b)
 
 
-       # print (f"db{db}")
+        w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,0.01)
 
-
-
-        return flagbool,kth,w,b,w1,b1,dw,db,dw1,db1
+        return flagbool,kth,w,b,w1,b1  #,dw,db,dw1,db1
 
 
