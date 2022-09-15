@@ -32,9 +32,6 @@ class Final():
         ########################### Starting Forward Prop ###########################
 
         l0tol1nect = Fullcycle.inductivedotproductl0tol1(w,b,realarr)   #position  = Fullcycle.RELU (randomarr) # for position purposes
-          
-        #ogweightsl0tol1 = Fullcycle.originalweightsl0tol1() # ? Perhaps not needed
-        #ogbiasesl0tol1 = Fullcycle.originalbiasesl0tol1() # ? Perhaps not needed
 
         reludone = Fullcycle.RELU(l0tol1nect)  # After Relu. zero to 1 connections complete with act.
         derivrelu = Fullcycle.PDRELU(reludone) 
@@ -78,7 +75,7 @@ class Final():
         nb1 =  Fullcycle.newbiasl2tol1(chainsoftcross,sftgrad, kth) # New bias l2 to l1
 
         nw =  Fullcycle.newweightl1tol0(chainsoftcross,derivrelu,realarr,w1, kth)  # New weights l1 to l0 
-        nb =  Fullcycle.newbiasl1tol0(chainsoftcross,derivrelu, kth)   # New bises l1 to l0 
+        nb =  Fullcycle.newbiasl1tol0(chainsoftcross,derivrelu,b1, kth)   # New bises l1 to l0 
         #print (nb , "New bias")
     
         
