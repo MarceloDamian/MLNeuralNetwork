@@ -10,19 +10,6 @@ class Final():
 
     def inductiveloop(self,flagbool,kth,w,b,w1,b1):   #,dw,db,dw1,db1): # add a k for iterations.
 
-        #print (w, "first w ")
-        #print (b, "first  B")
-        #print (w1, "first  W1")
-        #print (b1, "first B1")
-        
-        #print (dw[0], "first DW")
-        #print (db, "first DB")
-        #print (dw1, "first DW1")
-        #print (db1, "first DB1")
-
-
-        # THESE ARE 0 in the first iteration dw,db,dw1,db1
-
         ######### initalizing data  #################
         Fullcycle= nn.EpochCycle()  # calls class epoch cycle
         realarr = Fullcycle.replacewithrealarray(kth) #(3)# read all 42000. For loop. Gets data from index 4 
@@ -40,11 +27,7 @@ class Final():
 
         sftmax = Fullcycle.Softmax(l1tol2) # After Softmax. 1 to 2 connections complete with activation.
         ########################## Finishing Forward Prop ############################################
-
-        badimg = Fullcycle.explodedgradientresolved() # ? Perhaps not needed
-    
-
-        ######## going backwards and updating dw1, db1, dw, db ##########
+        ######## going backwards and updating  ##########
 
 
         ######################### Starting Backward Prop #########################
@@ -65,28 +48,23 @@ class Final():
                 
         flagbool = actispred
 
-
-
         crossderive = Fullcycle.CEntropyderivative(correctlabel,sftmax)  # array,labeltarget # Cross entropy derivative 
+        ccloss = Fullcycle.CEntropywithsoftchainrule(crossderive,sftgrad) # Cross entropy & Softmax Chain Rule derivative
+
+        nw,nb,nw1,nb1 = Fullcycle.errorbackprop(sftgrad,realarr,reludone,ccloss,derivrelu,crossderive,w1,w,b1,kth)
+
+        ########################## Updating weights ... ############################################
         
-        chainsoftcross = Fullcycle.CEntropywithsoftchainrule(crossderive,sftgrad) # Cross entropy & Softmax Chain Rule derivative
-        
-        nw1 =  Fullcycle.newweightl2tol1(chainsoftcross,sftgrad, reludone, kth) # New weights l2 to l1
-        nb1 =  Fullcycle.newbiasl2tol1(chainsoftcross,sftgrad, kth) # New bias l2 to l1
+        w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,0.1)
 
-        nw =  Fullcycle.newweightl1tol0(chainsoftcross,derivrelu,realarr,w1, kth)  # New weights l1 to l0 
-        nb =  Fullcycle.newbiasl1tol0(chainsoftcross,derivrelu,b1, kth)   # New bises l1 to l0 
-        #print (nb , "New bias")
-    
-        
-        ########################## Finishing Backward Prop ############################################
-            
-        #print (nb)
-        #print (b)
+        # 0.01 goes down 
+        # 0.1 yeilds 26 percent for 100. 31.9 percent for 1000 images
+        # 0.2 yields 31 percent for 100 and 61 percent for 29,400 
+        # 0.22 yeilds 32 percent for 100 
+        # 0.23 yeilds 33 percent for 100         
 
+        #EDIT: FOR 0.2 IT YEILDS 40 percent for 1000 images
 
-        w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,0.01)
-
-        return flagbool,kth,w,b,w1,b1  #,dw,db,dw1,db1
+        return flagbool,kth,w,b,w1,b1 
 
 
