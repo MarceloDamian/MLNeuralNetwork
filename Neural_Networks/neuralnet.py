@@ -3,18 +3,28 @@ import pandas as pd
 import csv
 import random
 import copy
-from scipy.special import expit
+from sklearn.utils import shuffle
+
 
 
 class EpochCycle():
+    
+    def shuffledtrain(self):
+                
+        with open('shuffledtrain.csv', 'w', encoding='UTF8', newline='') as f: 
+            data = pd.read_csv('./train.csv')
+            shuffled = shuffle(data,random_state=1)
+            shuffleddata = np.array(shuffled)
+            writer = csv.writer(f)
+            writer.writerows(shuffleddata)
 
     def replacewithrealarray(self, rnumber): # replaces with one picture from real array 
-                
+        
         numpyarray = np.array([])
 
-        with open('./train.csv', 'r') as csv_file: # probably changed to train.csv
+        with open('./shuffledtrain.csv', 'r') as csv_file: # probably changed to train.csv
             csvreader = csv.reader(csv_file) # loads data into csv reader
-            next(csvreader) # skips pixelnumbers skips 0 
+            #next(csvreader) # not needed for shuffled only for train # skips pixelnumbers skips 0 
             for index, row in enumerate(csvreader): # enumerates file into indexes
                if index==rnumber:  # Load image at row given
                     pixels = row[1:] # for train.csv ignores or skips over the 0th column  
@@ -44,8 +54,6 @@ class EpochCycle():
 
         #! change mutliplication to dot because it isnt supposed to just get multiplied 
         weightwithbias = np.dot (inductweights, npinsertarr) + inductbiases # maybe inductweights @ npinsertarr instead of dot. 
-        
-        #print (weightwithbias )
         inductivebeforeRelu = weightwithbias.reshape(533) #.tolist()
 
         return inductivebeforeRelu
@@ -136,9 +144,7 @@ class EpochCycle():
         return storeimage # use this to reflect image.
 
     def RELU(self,array): # perhaps I pass the prev output in here
-                
-        self.output= np.maximum(0,array)
-
+        self.output= np.maximum(0.01,array)
         #!print (f'Relu {self.output}')
         return self.output
     
@@ -195,7 +201,7 @@ class EpochCycle():
     def PDRELU(self, array):
 
         copyofrelu = copy.deepcopy(array) # this is essential as it was getting pdrelu instead
-        copyofrelu[copyofrelu<=0] = 0
+        copyofrelu[copyofrelu<=0.01] = 0
         copyofrelu[copyofrelu>0] = 1
         self.derivrelu = copyofrelu
 
@@ -220,61 +226,44 @@ class EpochCycle():
         return self.savebiasesl2tol1
        
     def Softmax(self,array): #! still needs fixing  
-
     # ! The problem is the weights.It was learning to fast thus a smaller learning rate
-
         self.softmaxlist =  np.exp(array) / sum(np.exp(array))
-        
-
-    #! ################### Consider deleting!!!!###############################
-        #counterofzeros = 0
-        #for x in range (10):
-        #    if (self.softmaxlist[x]==0.0):
-        #        counterofzeros+=1
-        #self.nextimage = False
-        #if counterofzeros == 9 : # 9 of them are zeros. This data plot is an overfit example. Bad image.
-        #    self.nextimage = True
-    #!######################################################################
         self.softmaxlist = self.softmaxlist.reshape(1,10)[0] 
         #!print (f'Softmax: {self.softmaxlist}')
-
-
         return self.softmaxlist
-
-    def explodedgradientresolved(self):
-
-        #return self.nextimage
-        return 0
 
     def Softmaxpartialderivatives(self,array):
 
         soft = array.reshape(10,1)#,1)
         partials = np.diagflat(soft) - np.dot(soft, soft.T)
         return partials
+
+    #def Softmaxpartialderivatives(self,array):
         ######## Alternate Code (same output)###############
-            #pdlists = []
-            #newlist=[]
 
-            #for i in range(10):
-            #    same = 0
-            #    rest = 0
-            #    for j in range (10):
-            #        if i==j:
-            #            same= array[i] * (1-array[i])  # i = 0         
-            #            pdlists.append(same) 
-            #        else:    
-            #            rest= -array[i] * (array[j])                          
-            #            pdlists.append(rest) 
+        #pdlists = []
+        #newlist=[]
 
-            #i=0
-            #newlist=[]
-            #while i<len(pdlists):
-            #    newlist.append(pdlists[i:i+10])
-            #    i+=10
+        #for i in range(10):
+        #    same = 0
+        #    rest = 0
+        #    for j in range (10):
+        #        if i==j:
+        #            same= array[i] * (1-array[i])  # i = 0         
+        #            pdlists.append(same) 
+        #        else:    
+        #            rest= -array[i] * (array[j])                          
+        #            pdlists.append(rest) 
 
-            ##print (newlist)
-            #return newlist
-            #####################################################
+        #i=0
+        #newlist=[]
+        #while i<len(pdlists):
+        #    newlist.append(pdlists[i:i+10])
+        #    i+=10
+
+        ##print (newlist)
+        #return newlist
+        #####################################################
 
     def Hotencode (self, desired):
         return np.eye(10,dtype="float")[desired] 
@@ -326,8 +315,7 @@ class EpochCycle():
 
     def CEntropyderivative(self,correctlabel_, softmax):
 
-
-        self.crossder = np.array ([])        
+        crossder = np.array ([])        
         targethotencode = self.Hotencode(int(correctlabel_)) #.reshape(10).tolist() 
         
         infinitesmal = float ('-inf')
@@ -338,15 +326,15 @@ class EpochCycle():
         for i in range (10):
             #print (f"softmax[i]{softmax[i]}") # check softmax values.if they are all 0 and one of them is 1.00 then its wrong delete that iteration
             if softmax[i] == 0.00000000e+000 or -float(targethotencode[i])/float (softmax[i]) == infinitesmal or -float(targethotencode[i])/float (softmax[i])==undefined or  -float(targethotencode[i])/float (softmax[i]) == -0. : # softmax[i] == 0.00000000e+000 or  ##reduces runtime error issue                
-                self.crossder = np.append (self.crossder, 0.00)
+                crossder = np.append (crossder, 0.00)
             else:
-                self.crossder = np.append(self.crossder, -float(targethotencode[i])/float (softmax[i]))
+                crossder = np.append(crossder, -float(targethotencode[i])/float (softmax[i]))
 
         #print (f'self.crossder{self.crossder}' )
         #print (f'new soft.crossder{-targethotencode/softmax}')
 
         #return -targethotencode/softmax
-        return self.crossder
+        return crossder
 
 
     def CEntropywithsoftchainrule (self,crossder,softpartials):
@@ -357,46 +345,20 @@ class EpochCycle():
 
         return loss 
 
-    def newweightl2tol1 (self,loss,softderiv, reluapplied, kth): # also reluapplied but that is self.output
+    def errorbackprop(self,derivsft, pixels,reludone,loss,drelu,cross,ogweightw1,ogweight,ogbiasb1,kth):
+         
+        w1loss  = np.dot (loss.reshape(10,1), reludone.reshape(1,533)) * 1/(kth + 1) # # 10 *   10,10  * 10  =  10,10 
+        nw1 = w1loss.reshape(533,10)
+        #################### everythings good. I am a bit concerned about bias...####################
+        nb1 = np.sum(nw1.reshape(10,533),1).reshape(10,1) * 1/(kth+1)  #loss.reshape(10,1)* 1/(kth+1) 
 
-        #print (loss.shape)
-        inductPROD  = loss.reshape(1,10) @ softderiv 
-        inductPROD = reluapplied.reshape(533,1) @ inductPROD.reshape(1,10)* 1/(kth + 1) # # 10 *   10,10  * 10  =  10,10 
-
-        # SOMETHING IS GOING ON. 
-        return inductPROD  
-
-
-    def newbiasl2tol1 (self,loss,softderiv, kth):
+        wloss = np.dot (loss.reshape(1,10),ogweightw1.reshape(10,533)) * drelu   
+        nw = np.dot (wloss.reshape(533,1), pixels.reshape(1,784)) * 1/(kth + 1)
         
-        baccumulator  = loss.reshape(1,10) @ softderiv 
-        baccumulator = baccumulator.reshape(10,1) * 1/(kth+1)
-
-        return baccumulator
-    
-    def newweightl1tol0(self,loss,drelu,pixels,prevweightl1, kth ):#(self,nxtchainrule, PIXELS):
-
-        lossdrelu = drelu.reshape(533,1) @ loss.reshape(1,10)  # 533 x 10 
-        variable = drelu.reshape(533,1) @ pixels.reshape (1,784) # 533 x 784   #   533 x 10  10 x 533 x 533 x 784
-        variableandloss = lossdrelu.reshape(533, 10)  @  prevweightl1.reshape(10,533)#variable.reshape (533,784) 
-
-        newweightsl1tol0 = variableandloss.reshape(533,533) @ variable.reshape(533,784) * 1/(kth+1)
-
-        return newweightsl1tol0
-
-    def newbiasl1tol0 (self, loss, drelu, prevbiasb1, kth):
-
-        #!print (f"newer drelu{drelu}")
-        #print (f"newer drelu{drelu}")
-        dloss = loss.reshape(10,1) @ drelu.reshape(1,533)
-        biasesl1tol0 = dloss.reshape(533,10) @ prevbiasb1.reshape(10,1) 
-        biasesl1tol0 = biasesl1tol0 * 1/(kth+1)
-
-        #print (biasesl1tol0.shape)
+        nb = np.sum(nw.reshape(533,784),1).reshape(533,1) * 1/(kth+1) 
         
-        return biasesl1tol0
+        return nw,nb,nw1,nb1
 
-        #! FIX UDPDATED LEARNING ALL OF THEM.  REVIEW GRADIENT DESCENT. 
 
     def updatewandb(self,w,b,w1,b1,nw,nb,nw1,nb1,learnrate):
      
@@ -427,3 +389,5 @@ class EpochCycle():
 
             
         return neww,newb,neww1,newb1
+
+    
