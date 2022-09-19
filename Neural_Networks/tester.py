@@ -35,7 +35,7 @@ db1 = np.zeros((10,1))
 flag = False
 accuratepredictions = 0
 
-upto = 1000#29400  # 1,0,1,4,0,0
+upto = 1000 #29400  # 1,0,1,4,0,0
 
 
 

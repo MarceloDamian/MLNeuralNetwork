@@ -55,14 +55,15 @@ class Final():
 
         ########################## Updating weights ... ############################################
         
-        w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,0.1)
+        w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,kth,0.9, 0.24)
 
         # 0.01 goes down 
         # 0.1 yeilds 26 percent for 100. 31.9 percent for 1000 images
-        # 0.2 yields 31 percent for 100 and 61 percent for 29,400 
-        # 0.22 yeilds 32 percent for 100 
-        # 0.23 yeilds 33 percent for 100         
-
+        # 0.2 yields 31 percent for 100. 39.9% for 1000 images. 61 percent for 29,400.
+        # 0.22 yeilds 32 percent for 100. 41.4 percent for 1000 images
+        # 0.23 yeilds 33 percent for 100.  42.9 percent for 1000 images    
+        # 0.24 yeilds 43.3 percent for 1000
+        # 0.25 yeilds 42.9
         #EDIT: FOR 0.2 IT YEILDS 40 percent for 1000 images
 
         return flagbool,kth,w,b,w1,b1 

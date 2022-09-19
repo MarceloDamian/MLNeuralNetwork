@@ -360,22 +360,27 @@ class EpochCycle():
         return nw,nb,nw1,nb1
 
 
-    def updatewandb(self,w,b,w1,b1,nw,nb,nw1,nb1,learnrate):
+    def updatewandb(self,w,b,w1,b1,nw,nb,nw1,nb1,kth,momentum,lr):
      
         #print (nb, "nbshape", nb.shape)
 
-        ####### Very Volatile
-        #neww = w + (nw * learnrate) 
-        #newb = b + (nb * learnrate)#b - (nb * learnrate)
-        #neww1 = w1 + (nw1 * learnrate) #w1 - (nw1 * learnrate) 
-        #newb1 = b1 + (nb1 * learnrate)#b1 - (nb1 * learnrate)
-    
-        ####### Yeilds 20 percent. STABLE.
-        neww = w - (nw * learnrate) 
-        newb = b - (nb * learnrate)#b - (nb * learnrate)
-        neww1 = w1 - (nw1 * learnrate) #w1 - (nw1 * learnrate) 
-        newb1 = b1 - (nb1 * learnrate)#b1 - (nb1 * learnrate)
+        # w = w – change_x  # what you have 
+        # change_x = lr * nw
+        #############################################
 
+        # change_x(t) = lr * nw(t-1) + mu * (lr * nw)o(t-1)   # what you want. Desired
+                
+        # w(t) = w(t-1) – change_x(t)
+        # w(0) =  w - (nw * lr) 
+
+
+        ####### Yeilds 20 percent. STABLE.
+        neww = w - (nw * lr) 
+        newb = b - (nb * lr)#b - (nb * learnrate)
+        neww1 = w1 - (nw1 * lr) #w1 - (nw1 * learnrate) 
+        newb1 = b1 - (nb1 * lr)#b1 - (nb1 * learnrate)
+
+        #print(nb1 * learnrate)
         #print ("\nthis one ",b, "i=1  ")
         # b is lessrandom. and 
         #print (w, "first  W")
