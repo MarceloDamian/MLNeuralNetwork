@@ -12,60 +12,44 @@ class Final():
 
         ######### initalizing data  #################
         Fullcycle= nn.EpochCycle()  # calls class epoch cycle
-        realarr = Fullcycle.replacewithrealarray(kth) #(3)# read all 42000. For loop. Gets data from index 4 
         
-        correctlabel = Fullcycle.accuratelabel()
+        Fullcycle.replacewithrealarray(kth) #(3)# read all 42000. For loop. Gets data from index 4         
+        Fullcycle.accuratelabel()
         
         ########################### Starting Forward Prop ###########################
-
-        l0tol1nect = Fullcycle.inductivedotproductl0tol1(w,b,realarr)   #position  = Fullcycle.RELU (randomarr) # for position purposes
-
-        reludone = Fullcycle.RELU(l0tol1nect)  # After Relu. zero to 1 connections complete with act.
-        derivrelu = Fullcycle.PDRELU(reludone) 
-
-        l1tol2 = Fullcycle.inductivedotproductl1tol2(w1,b1) # !changed
-
-        sftmax = Fullcycle.Softmax(l1tol2) # After Softmax. 1 to 2 connections complete with activation.
-        ########################## Finishing Forward Prop ############################################
-        ######## going backwards and updating  ##########
-
+        Fullcycle.inductivedotproductl0tol1(w,b)   #position  = Fullcycle.RELU (randomarr) # for position purposes
+        Fullcycle.RELU()  # After Relu. zero to 1 connections complete with act.
+        Fullcycle.PDRELU() 
+        Fullcycle.inductivedotproductl1tol2(w1,b1) # !changed
+        Fullcycle.Softmax() # After Softmax. 1 to 2 connections complete with activation.
 
         ######################### Starting Backward Prop #########################
-        sftgrad = Fullcycle.Softmaxpartialderivatives(sftmax) # Softmax partial derivatives or gradients
-        sfthotencode = Fullcycle.SoftmaxHotencode(sftmax) 
-           
-        crossentr = Fullcycle.Cross_entropy(correctlabel,sftmax) # array,labeltarget # Cross entropy on Softmax
+        Fullcycle.Softmaxpartialderivatives() # Softmax partial derivatives or gradients
+        Fullcycle.SoftmaxHotencode() 
+        Fullcycle.Cross_entropy() # array,labeltarget # Cross entropy on Softmax
+        
+        Fullcycle.maxcrossentropy() # NEEDED TO PRINT
+        
+        actispred= Fullcycle.Probability()
+        
 
-        lowcost=Fullcycle.maxcrossentropy() # NEEDED FOR MAX
-        print (f'CROSS ENTROPY::::: {Fullcycle.maxcrossentropy()}')
-
-        actispred,Y,Ypred,correctpred = Fullcycle.Probability(correctlabel)
-        #!
-        print (f'\nCORRECT LABEL::: {Y}  PREDICTED LABEL:::  {Ypred}  Probability Of Correct Label :::  {correctpred * 100} %\n')
-
-        if actispred==True :
-            print ('   BASE::::  SYS.EXIT: ACCURATE == PREDICTED   TRUE     \n')
-                
-        flagbool = actispred
-
-        crossderive = Fullcycle.CEntropyderivative(correctlabel,sftmax)  # array,labeltarget # Cross entropy derivative 
-        ccloss = Fullcycle.CEntropywithsoftchainrule(crossderive,sftgrad) # Cross entropy & Softmax Chain Rule derivative
-
-        nw,nb,nw1,nb1 = Fullcycle.errorbackprop(sftgrad,realarr,reludone,ccloss,derivrelu,crossderive,w1,w,b1,kth)
+        Fullcycle.CEntropyderivative()  # array,labeltarget # Cross entropy derivative 
+        Fullcycle.CEntropywithsoftchainrule() # Cross entropy & Softmax Chain Rule derivative
+       
+        nw,nb,nw1,nb1 = Fullcycle.errorbackprop(w1,w,b1,kth)
 
         ########################## Updating weights ... ############################################
-        
-        w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,kth,0.9, 0.24)
+        w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,kth,0.9, 0.23)
 
         # 0.01 goes down 
         # 0.1 yeilds 26 percent for 100. 31.9 percent for 1000 images
         # 0.2 yields 31 percent for 100. 39.9% for 1000 images. 61 percent for 29,400.
         # 0.22 yeilds 32 percent for 100. 41.4 percent for 1000 images
         # 0.23 yeilds 33 percent for 100.  42.9 percent for 1000 images    
-        # 0.24 yeilds 43.3 percent for 1000
-        # 0.25 yeilds 42.9
+        # 0.24 yeilds 32 percent for 100.  yeilds 43.3 percent for 1000
+        # 0.25 yeilds 42.9 percent for 1000.
         #EDIT: FOR 0.2 IT YEILDS 40 percent for 1000 images
 
-        return flagbool,kth,w,b,w1,b1 
+        return actispred,kth,w,b,w1,b1 
 
 

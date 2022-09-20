@@ -31,8 +31,8 @@ class EpochCycle():
                     self.label = row[0] #! These are the labels of train.csv 
             
             numpyarray = np.append (numpyarray, list(map(float, pixels)) ) # map characthers as integers
-
-        return numpyarray/255 # full image is established in nested list. Divided by 255 to get value under 1.
+            self.scaledarray =  numpyarray/255
+        return self.scaledarray # full image is established in nested list. Divided by 255 to get value under 1.
     
     def accuratelabel(self):
         return self.label
@@ -48,15 +48,15 @@ class EpochCycle():
     def randomsum(self, randomarray):
         return np.sum (randomarray)
 
-    def inductivedotproductl0tol1 (self, inductweights, inductbiases, arrayofpixels):
-        
+    def inductivedotproductl0tol1 (self, inductweights, inductbiases):
+        arrayofpixels = copy.deepcopy(self.scaledarray) # this is essential as it was getting pdrelu instead
         npinsertarr = arrayofpixels.reshape(784,1) # reduced this was next line : npinsertarr = npinsertarr.reshape(784,1)
-
         #! change mutliplication to dot because it isnt supposed to just get multiplied 
         weightwithbias = np.dot (inductweights, npinsertarr) + inductbiases # maybe inductweights @ npinsertarr instead of dot. 
-        inductivebeforeRelu = weightwithbias.reshape(533) #.tolist()
+        self.inductivebeforerelu = weightwithbias.reshape(533) #.tolist()
 
-        return inductivebeforeRelu
+        #print ("Actual:  ",self.inductivebeforerelu)
+        return self.inductivebeforerelu
 
     def originalweightsl0tol1 (self):
         return self.saveweightsl0tol1
@@ -143,13 +143,15 @@ class EpochCycle():
 
         return storeimage # use this to reflect image.
 
-    def RELU(self,array): # perhaps I pass the prev output in here
+    def RELU(self): # perhaps I pass the prev output in here
+        array = copy.deepcopy(self.inductivebeforerelu) # this is essential as it was getting pdrelu instead
         self.output= np.maximum(0.01,array)
         #!print (f'Relu {self.output}')
         return self.output
     
     def maxRELUvalue(self):
-        self.maxreluval = np.max(self.output)  
+        array = copy.deepcopy(self.output) # this is essential as it was getting pdrelu instead
+        self.maxreluval = np.max(array)  
         return self.maxreluval  
 
     def positionofmaxRELUvalue(self,apprelu_,targetsum_):
@@ -198,9 +200,9 @@ class EpochCycle():
             writer.writerows(data)
         return data
         
-    def PDRELU(self, array):
+    def PDRELU(self):
 
-        copyofrelu = copy.deepcopy(array) # this is essential as it was getting pdrelu instead
+        copyofrelu = copy.deepcopy(self.output) # this is essential as it was getting pdrelu instead
         copyofrelu[copyofrelu<=0.01] = 0
         copyofrelu[copyofrelu>0] = 1
         self.derivrelu = copyofrelu
@@ -211,13 +213,15 @@ class EpochCycle():
     
     def inductivedotproductl1tol2 (self, inductweightsl1, inductbiasesl1):
         
-        npinsertarr = np.array(self.output).reshape(533,1) # reduced this was next line : npinsertarr = npinsertarr.reshape(784,1)       
+        array = copy.deepcopy(self.output) # this is essential as it was getting pdrelu instead
+        #print (self.output)
+        npinsertarr = np.array(array).reshape(533,1) # reduced this was next line : npinsertarr = npinsertarr.reshape(784,1)       
         inductweightsl1 = inductweightsl1.reshape (10,533) #! added
-        inductiveAFTERRelu = (np.dot (inductweightsl1, npinsertarr) ) + inductbiasesl1
+        self.inductiveAFTERRelu = (np.dot (inductweightsl1, npinsertarr) ) + inductbiasesl1
         #inductiveAFTERRelu = inductiveAFTERRelu#.reshape(10)
         #print (f'inductiveAFTERRelu::{inductiveAFTERRelu}' )
 
-        return inductiveAFTERRelu
+        return self.inductiveAFTERRelu
 
     def originalweightsl1tol2(self):
         return self.saveweightsl1tol2
@@ -225,18 +229,19 @@ class EpochCycle():
     def originalbiasesl1tol2(self):
         return self.savebiasesl2tol1
        
-    def Softmax(self,array): #! still needs fixing  
+    def Softmax(self): #! still needs fixing  
     # ! The problem is the weights.It was learning to fast thus a smaller learning rate
+        array = copy.deepcopy(self.inductiveAFTERRelu) # this is essential as it was getting pdrelu instead
         self.softmaxlist =  np.exp(array) / sum(np.exp(array))
         self.softmaxlist = self.softmaxlist.reshape(1,10)[0] 
         #!print (f'Softmax: {self.softmaxlist}')
         return self.softmaxlist
 
-    def Softmaxpartialderivatives(self,array):
-
+    def Softmaxpartialderivatives(self):
+        array = copy.deepcopy(self.softmaxlist) # this is essential as it was getting pdrelu instead
         soft = array.reshape(10,1)#,1)
-        partials = np.diagflat(soft) - np.dot(soft, soft.T)
-        return partials
+        self.partials = np.diagflat(soft) - np.dot(soft, soft.T)
+        return self.partials
 
     #def Softmaxpartialderivatives(self,array):
         ######## Alternate Code (same output)###############
@@ -268,8 +273,8 @@ class EpochCycle():
     def Hotencode (self, desired):
         return np.eye(10,dtype="float")[desired] 
 
-    def SoftmaxHotencode (self,array):
-
+    def SoftmaxHotencode (self):
+        array = copy.deepcopy(self.softmaxlist) # this is essential as it was getting pdrelu instead
         self.predlabel = np.argmax(array)
         newarray = self.Hotencode(self.predlabel)
 
@@ -289,8 +294,10 @@ class EpochCycle():
         
         return lossarray
 
-    def Cross_entropy(self,correctlabel_,array) :
-
+    def Cross_entropy(self) :
+        
+        correctlabel_ = copy.deepcopy(self.label) # this is essential as it was getting pdrelu instead        
+        array = copy.deepcopy(self.softmaxlist) # this is essential as it was getting pdrelu instead
         nphotencode = self.Hotencode( int (correctlabel_)) #self.Hotencode(intlabel).reshape(10)  
         self.crossentropyarray = np.sum(-nphotencode*np.log(array))
 
@@ -299,23 +306,29 @@ class EpochCycle():
 
     def maxcrossentropy (self):
         self.maxnum = np.max(self.crossentropyarray)    
+        print (f'CROSS ENTROPY::::: {self.maxnum}')
         return self.maxnum  
     
-    def Probability(self,correctlabel_):  # pred = something new , y = label
+    def Probability(self):  # pred = something new , y = label
     
+        correctlabel_ = copy.deepcopy(self.label) # this is essential as it was getting pdrelu instead        
+        sftarray = copy.deepcopy(self.softmaxlist) # this is essential as it was getting pdrelu instead
         Y_ = int (correctlabel_)
         YPred_ = int (self.predlabel)
         correctpred_= 0 
         
         for i in range (10):
             if i==Y_:
-                correctpred_ = self.softmaxlist[i]
-                
-        return (Y_==YPred_),Y_, YPred_, correctpred_ # cross entropy, if they are equal, 
+                correctpred_ = sftarray[i]
+        
+        print (f'\nCORRECT LABEL::: {Y_}  PREDICTED LABEL:::  {YPred_}  Probability Of Correct Label :::  {correctpred_ * 100} %\n')
 
-    def CEntropyderivative(self,correctlabel_, softmax):
+        return (Y_==YPred_)#,Y_, YPred_, correctpred_ # cross entropy, if they are equal, 
 
-        crossder = np.array ([])        
+    def CEntropyderivative(self):
+        correctlabel_ = copy.deepcopy(self.label) # this is essential as it was getting pdrelu instead        
+        softmax = copy.deepcopy(self.softmaxlist) # this is essential as it was getting pdrelu instead
+        self.crossder = np.array ([])        
         targethotencode = self.Hotencode(int(correctlabel_)) #.reshape(10).tolist() 
         
         infinitesmal = float ('-inf')
@@ -326,27 +339,32 @@ class EpochCycle():
         for i in range (10):
             #print (f"softmax[i]{softmax[i]}") # check softmax values.if they are all 0 and one of them is 1.00 then its wrong delete that iteration
             if softmax[i] == 0.00000000e+000 or -float(targethotencode[i])/float (softmax[i]) == infinitesmal or -float(targethotencode[i])/float (softmax[i])==undefined or  -float(targethotencode[i])/float (softmax[i]) == -0. : # softmax[i] == 0.00000000e+000 or  ##reduces runtime error issue                
-                crossder = np.append (crossder, 0.00)
+                self.crossder = np.append (self.crossder, 0.00)
             else:
-                crossder = np.append(crossder, -float(targethotencode[i])/float (softmax[i]))
+                self.crossder = np.append(self.crossder, -float(targethotencode[i])/float (softmax[i]))
 
         #print (f'self.crossder{self.crossder}' )
         #print (f'new soft.crossder{-targethotencode/softmax}')
 
         #return -targethotencode/softmax
-        return crossder
+        return self.crossder
 
 
-    def CEntropywithsoftchainrule (self,crossder,softpartials):
+    def CEntropywithsoftchainrule (self):
+        crossder_ = copy.deepcopy(self.crossder) # this is essential as it was getting pdrelu instead
+        softpartials_ = copy.deepcopy(self.partials) # this is essential as it was getting pdrelu instead
+        self.loss = crossder_ @ softpartials_ 
+        return self.loss 
 
-        loss = crossder @ softpartials 
+    def errorbackprop(self,ogweightw1,ogweight,ogbiasb1,kth):
+        derivsft = copy.deepcopy(self.partials) # this is essential as it was getting pdrelu instead
+        pixels = copy.deepcopy(self.scaledarray) # this is essential as it was getting pdrelu instead
+        reludone = copy.deepcopy(self.output) # this is essential as it was getting pdrelu instead
+        loss = copy.deepcopy(self.loss) # this is essential as it was getting pdrelu instead
+        drelu = copy.deepcopy(self.derivrelu) # this is essential as it was getting pdrelu instead
+        cross = copy.deepcopy(self.crossder) # this is essential as it was getting pdrelu instead
 
-        #print (f"cechain = {loss}")
-
-        return loss 
-
-    def errorbackprop(self,derivsft, pixels,reludone,loss,drelu,cross,ogweightw1,ogweight,ogbiasb1,kth):
-         
+        
         w1loss  = np.dot (loss.reshape(10,1), reludone.reshape(1,533)) * 1/(kth + 1) # # 10 *   10,10  * 10  =  10,10 
         nw1 = w1loss.reshape(533,10)
         #################### everythings good. I am a bit concerned about bias...####################
@@ -360,7 +378,7 @@ class EpochCycle():
         return nw,nb,nw1,nb1
 
 
-    def updatewandb(self,w,b,w1,b1,nw,nb,nw1,nb1,kth,momentum,lr):
+    def updatewandb(self,w,b,w1,b1,nw,nb,nw1,nb1,kth,mu,lr):
      
         #print (nb, "nbshape", nb.shape)
 
@@ -368,17 +386,30 @@ class EpochCycle():
         # change_x = lr * nw
         #############################################
 
-        # change_x(t) = lr * nw(t-1) + mu * (lr * nw)o(t-1)   # what you want. Desired
-                
-        # w(t) = w(t-1) – change_x(t)
-        # w(0) =  w - (nw * lr) 
+        #change_x(t) = lr * nw(t-1) + mu * (lr * nw)o(t-1)   # what you want. Desired
+        
+        #w(t) = w(t-1) – change_x(t)
+        ###Done: ### w(0) =  w - (nw * lr) 
+
+        # We need the previous weight or bias. 
+        # We need the previous lr value. 
+        # we need to set a condition for w(0)
+
+        #if kth==0 :        
+        neww = w - (lr * nw) 
+        newb = b - (lr * nb)    #b - (nb * learnrate)
+        neww1 = w1 - (lr * nw1) #w1 - (nw1 * learnrate) 
+        newb1 = b1 - (lr * nb1) #b1 - (nb1 * learnrate)
+        #else:
+        #    neww = prevw - (lr * prevnw + mu * prevlr * prevnw) 
+        #    newb = prevb - (lr * prevnb + mu * prevlr * prevnb)     #b - (nb * learnrate)
+        #    neww1 = prevw1 - (lr * prevnw1 + mu * prevlr * prevnw1)     #w1 - (nw1 * learnrate) 
+        #    newb1 = prevb1 - (lr * prevnb1 + mu * prevlr * prevnb1) #b1 - (nb1 * learnrate)
 
 
-        ####### Yeilds 20 percent. STABLE.
-        neww = w - (nw * lr) 
-        newb = b - (nb * lr)#b - (nb * learnrate)
-        neww1 = w1 - (nw1 * lr) #w1 - (nw1 * learnrate) 
-        newb1 = b1 - (nb1 * lr)#b1 - (nb1 * learnrate)
+        #change_x(t) = lr * nw(t-1) + mu * (lr * nw)o(t-1)   # what you want. Desired
+        
+        #w(t) = w(t-1) – change_x(t)
 
         #print(nb1 * learnrate)
         #print ("\nthis one ",b, "i=1  ")
@@ -396,3 +427,73 @@ class EpochCycle():
         return neww,newb,neww1,newb1
 
     
+if __name__ == "__main__":
+    np.random.seed (0)  # size(sets, nodes)
+    w = np.random.uniform(size=(533,784),low = -1, high= 1) * np.sqrt(2 / 784) #maybe change to -1 as low 
+    np.random.seed(0)
+    b = np.random.uniform(size=(533,1),low = 0, high= 1) * 0   # very small biases #b = np.random.uniform(size=(533,1),low = -1, high= 1) * np.sqrt(2 / 533) 
+
+    ############################################################################################
+    np.random.seed (1)
+    w1 = np.random.uniform(size=(533,10),low = -1, high= 1) * np.sqrt(2 / 533)#maybe change to -1 as low 
+    np.random.seed(1)
+    b1 = np.random.uniform(size=(10,1),low = 0, high= 1) * 0  # very small biases # b1 = np.random.uniform(size=(10,1),low = -1, high= 1) *  np.sqrt(2 / 10) 
+
+    #############################################################################################
+
+    dw = np.zeros((533,784))
+    db = np.zeros((533,1))
+
+    dw1 = np.zeros((533,10))
+    db1 = np.zeros((10,1))
+
+
+    actispred = False
+    accuratepredictions = 0
+
+    up_to = 100
+
+    for k in range(0,up_to): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
+
+        ######### initalizing data  #################
+        Fullcycle= EpochCycle()  # calls class epoch cycle
+        Fullcycle.replacewithrealarray(k) #(3)# read all 42000. For loop. Gets data from index 4         
+        Fullcycle.accuratelabel()
+        ########################### Starting Forward Prop ###########################
+        Fullcycle.inductivedotproductl0tol1(w,b)   #position  = Fullcycle.RELU (randomarr) # for position purposes
+        Fullcycle.RELU()  # After Relu. zero to 1 connections complete with act.
+        Fullcycle.PDRELU() 
+        Fullcycle.inductivedotproductl1tol2(w1,b1) # !changed
+        Fullcycle.Softmax() # After Softmax. 1 to 2 connections complete with activation.
+        ######################### Starting Backward Prop #########################
+        Fullcycle.Softmaxpartialderivatives() # Softmax partial derivatives or gradients
+        Fullcycle.SoftmaxHotencode() 
+        Fullcycle.Cross_entropy() # array,labeltarget # Cross entropy on Softmax
+        Fullcycle.maxcrossentropy() # NEEDED TO PRINT
+        actispred= Fullcycle.Probability()
+        Fullcycle.CEntropyderivative()  # array,labeltarget # Cross entropy derivative 
+        Fullcycle.CEntropywithsoftchainrule() # Cross entropy & Softmax Chain Rule derivative
+        nw,nb,nw1,nb1 = Fullcycle.errorbackprop(w1,w,b1,k)
+        w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,k,0.9, 0.23)
+
+        # 0.01 goes down 
+        # 0.1 yeilds 26 percent for 100. 31.9 percent for 1000 images
+        # 0.2 yields 31 percent for 100. 39.9% for 1000 images. 61 percent for 29,400.
+        # 0.22 yeilds 32 percent for 100. 41.4 percent for 1000 images
+        # 0.23 yeilds 33 percent for 100.  42.9 percent for 1000 images    
+        # 0.24 yeilds 32 percent for 100.  yeilds 43.3 percent for 1000
+        # 0.25 yeilds 42.9 percent for 1000.
+        #EDIT: FOR 0.2 IT YEILDS 40 percent for 1000 images
+
+        print (k)
+        actispred,k,w,b,w1,b1 = actispred,k,w,b,w1,b1
+
+        if actispred == True:
+            print (f' ACCURATE == PREDICTED   TRUE   K: {k}   \n') 
+            accuratepredictions+=1
+            #break 
+
+    accuracy = accuratepredictions / up_to # len (trainingset) # change to len (testingset) when running testing set.    
+    print (f'\n ACCURACY  ::: {accuracy * 100}%')
+
+    #print ("hello")
