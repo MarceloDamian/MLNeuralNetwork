@@ -35,7 +35,7 @@ db1 = np.zeros((10,1))
 flag = False
 accuratepredictions = 0
 
-upto = 1000 #29400  # 1,0,1,4,0,0
+upto = 10     #29400  # 1,0,1,4,0,0
 
 
 
@@ -53,7 +53,7 @@ for k in range(0,upto): #trainingset:  # loops through images. 90 sec = 10 image
     #print (F"WEIGHTS l1 TO L2 : {wdeltal1}\n BIASES l1 TO L2 : {bdeltal1}\n ")
 
     if tf == True:
-        print (f'tf {tf}, {k}')
+        print (f' ACCURATE == PREDICTED   TRUE   K: {k}   \n') 
         accuratepredictions+=1
         #break       
 
