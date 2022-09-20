@@ -5,10 +5,23 @@ import random
 import copy
 from sklearn.utils import shuffle
 
-
-
 class EpochCycle():
     
+    def weightsandbiases(self):
+
+        np.random.seed (0)  # size(sets, nodes)
+        w = np.random.uniform(size=(533,784),low = -1, high= 1) * np.sqrt(2 / 784) #maybe change to -1 as low 
+        np.random.seed(0)
+        b = np.random.uniform(size=(533,1),low = 0, high= 1) * 0   # very small biases #b = np.random.uniform(size=(533,1),low = -1, high= 1) * np.sqrt(2 / 533) 
+
+        ############################################################################################
+        np.random.seed (1)
+        w1 = np.random.uniform(size=(533,10),low = -1, high= 1) * np.sqrt(2 / 533)#maybe change to -1 as low 
+        np.random.seed(1)
+        b1 = np.random.uniform(size=(10,1),low = 0, high= 1) * 0  # very small biases # b1 = np.random.uniform(size=(10,1),low = -1, high= 1) *  np.sqrt(2 / 10) 
+        
+        return w,b,w1,b1
+
     def shuffledtrain(self):
                 
         with open('shuffledtrain.csv', 'w', encoding='UTF8', newline='') as f: 
@@ -357,13 +370,11 @@ class EpochCycle():
         return self.loss 
 
     def errorbackprop(self,ogweightw1,ogweight,ogbiasb1,kth):
-        derivsft = copy.deepcopy(self.partials) # this is essential as it was getting pdrelu instead
+
         pixels = copy.deepcopy(self.scaledarray) # this is essential as it was getting pdrelu instead
         reludone = copy.deepcopy(self.output) # this is essential as it was getting pdrelu instead
         loss = copy.deepcopy(self.loss) # this is essential as it was getting pdrelu instead
         drelu = copy.deepcopy(self.derivrelu) # this is essential as it was getting pdrelu instead
-        cross = copy.deepcopy(self.crossder) # this is essential as it was getting pdrelu instead
-
         
         w1loss  = np.dot (loss.reshape(10,1), reludone.reshape(1,533)) * 1/(kth + 1) # # 10 *   10,10  * 10  =  10,10 
         nw1 = w1loss.reshape(533,10)
@@ -372,16 +383,12 @@ class EpochCycle():
 
         wloss = np.dot (loss.reshape(1,10),ogweightw1.reshape(10,533)) * drelu   
         nw = np.dot (wloss.reshape(533,1), pixels.reshape(1,784)) * 1/(kth + 1)
-        
         nb = np.sum(nw.reshape(533,784),1).reshape(533,1) * 1/(kth+1) 
-        
-        return nw,nb,nw1,nb1
+    
+        return nw,nb,nw1,nb1 # change these to self after adding momentum 
 
-
-    def updatewandb(self,w,b,w1,b1,nw,nb,nw1,nb1,kth,mu,lr):
+    def updatewandb(self,w,b,w1,b1,nw,nb,nw1,nb1,prevnw,prevnb,prevnw1,prevnb1,alterdw,alterdb,alterdw1,alterdb1,kth,mu,lr):
      
-        #print (nb, "nbshape", nb.shape)
-
         # w = w – change_x  # what you have 
         # change_x = lr * nw
         #############################################
@@ -389,74 +396,67 @@ class EpochCycle():
         #change_x(t) = lr * nw(t-1) + mu * (lr * nw)o(t-1)   # what you want. Desired
         
         #w(t) = w(t-1) – change_x(t)
-        ###Done: ### w(0) =  w - (nw * lr) 
-
-        # We need the previous weight or bias. 
+        ###Done: ### w(0) =  w - (nw * lr)
+         
         # We need the previous lr value. 
+        # We need the previous weight or bias. 
         # we need to set a condition for w(0)
+        deltaw = (lr * nw) 
+        deltab = (lr * nb) 
+        deltaw1 = (lr * nw1) 
+        deltab1 = (lr * nb1) 
 
-        #if kth==0 :        
-        neww = w - (lr * nw) 
-        newb = b - (lr * nb)    #b - (nb * learnrate)
-        neww1 = w1 - (lr * nw1) #w1 - (nw1 * learnrate) 
-        newb1 = b1 - (lr * nb1) #b1 - (nb1 * learnrate)
-        #else:
-        #    neww = prevw - (lr * prevnw + mu * prevlr * prevnw) 
-        #    newb = prevb - (lr * prevnb + mu * prevlr * prevnb)     #b - (nb * learnrate)
-        #    neww1 = prevw1 - (lr * prevnw1 + mu * prevlr * prevnw1)     #w1 - (nw1 * learnrate) 
-        #    newb1 = prevb1 - (lr * prevnb1 + mu * prevlr * prevnb1) #b1 - (nb1 * learnrate)
+        if kth==0:        
+            neww = w - deltaw
+            newb = b - deltab    #b - (nb * learnrate)
+            neww1 = w1 - deltaw1 #w1 - (nw1 * learnrate) 
+            newb1 = b1 - deltab1 #b1 - (nb1 * learnrate)
+            alterdw = neww
+            alterdb = newb
+            alterdw1 = neww1
+            alterdb1 = newb1
+        else:
 
+            alterdw = lr * prevnw + mu * alterdw# this is the prevalterdw
+            alterdb = lr * prevnb + mu * alterdb# this is the prevalterdw
+            alterdw1 = lr * prevnw1 + mu * alterdw1# this is the prevalterdw
+            alterdb1 = lr * prevnb1 + mu * alterdb1# this is the prevalterdw
+
+            neww = w - alterdw
+            newb = b - alterdb
+            neww1 = w1 - alterdw1
+            newb1 = b1 - alterdb1
+
+        #    lr = 0.23
 
         #change_x(t) = lr * nw(t-1) + mu * (lr * nw)o(t-1)   # what you want. Desired
         
         #w(t) = w(t-1) – change_x(t)
 
-        #print(nb1 * learnrate)
-        #print ("\nthis one ",b, "i=1  ")
-        # b is lessrandom. and 
-        #print (w, "first  W")
-        #print (b, "first  B")
-        #print (w1, "first  W1")
-        #print (b1, "first B1")
-        #print (dw, "first DW")
-        #print (db, "first DB")
-        #print (dw1, "first DW1")
-        #print (db1, "first DB1")
-
-            
-        return neww,newb,neww1,newb1
+        return neww,newb,neww1,newb1, alterdw, alterdb,alterdw1,alterdb1
 
     
 if __name__ == "__main__":
-    np.random.seed (0)  # size(sets, nodes)
-    w = np.random.uniform(size=(533,784),low = -1, high= 1) * np.sqrt(2 / 784) #maybe change to -1 as low 
-    np.random.seed(0)
-    b = np.random.uniform(size=(533,1),low = 0, high= 1) * 0   # very small biases #b = np.random.uniform(size=(533,1),low = -1, high= 1) * np.sqrt(2 / 533) 
 
-    ############################################################################################
-    np.random.seed (1)
-    w1 = np.random.uniform(size=(533,10),low = -1, high= 1) * np.sqrt(2 / 533)#maybe change to -1 as low 
-    np.random.seed(1)
-    b1 = np.random.uniform(size=(10,1),low = 0, high= 1) * 0  # very small biases # b1 = np.random.uniform(size=(10,1),low = -1, high= 1) *  np.sqrt(2 / 10) 
-
-    #############################################################################################
-
-    dw = np.zeros((533,784))
-    db = np.zeros((533,1))
-
-    dw1 = np.zeros((533,10))
-    db1 = np.zeros((10,1))
-
-
-    actispred = False
     accuratepredictions = 0
+    images = 100
 
-    up_to = 100
+    ######### initalizing data  #################
+    Fullcycle = EpochCycle()  # calls class epoch cycle
+    w,b,w1,b1 = Fullcycle.weightsandbiases()
 
-    for k in range(0,up_to): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
+    fw = np.zeros((533,784))
+    fb = np.zeros((533,1))
 
-        ######### initalizing data  #################
-        Fullcycle= EpochCycle()  # calls class epoch cycle
+    fw1 = np.zeros((533,10))
+    fb1 = np.zeros((10,1))
+
+    aw,ab,aw1,ab1 = 0,0,0,0
+
+
+    for k in range(0,images): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
+
+
         Fullcycle.replacewithrealarray(k) #(3)# read all 42000. For loop. Gets data from index 4         
         Fullcycle.accuratelabel()
         ########################### Starting Forward Prop ###########################
@@ -470,30 +470,41 @@ if __name__ == "__main__":
         Fullcycle.SoftmaxHotencode() 
         Fullcycle.Cross_entropy() # array,labeltarget # Cross entropy on Softmax
         Fullcycle.maxcrossentropy() # NEEDED TO PRINT
-        actispred= Fullcycle.Probability()
-        Fullcycle.CEntropyderivative()  # array,labeltarget # Cross entropy derivative 
-        Fullcycle.CEntropywithsoftchainrule() # Cross entropy & Softmax Chain Rule derivative
-        nw,nb,nw1,nb1 = Fullcycle.errorbackprop(w1,w,b1,k)
-        w,b,w1,b1= Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,k,0.9, 0.23)
-
-        # 0.01 goes down 
-        # 0.1 yeilds 26 percent for 100. 31.9 percent for 1000 images
-        # 0.2 yields 31 percent for 100. 39.9% for 1000 images. 61 percent for 29,400.
-        # 0.22 yeilds 32 percent for 100. 41.4 percent for 1000 images
-        # 0.23 yeilds 33 percent for 100.  42.9 percent for 1000 images    
-        # 0.24 yeilds 32 percent for 100.  yeilds 43.3 percent for 1000
-        # 0.25 yeilds 42.9 percent for 1000.
-        #EDIT: FOR 0.2 IT YEILDS 40 percent for 1000 images
-
-        print (k)
-        actispred,k,w,b,w1,b1 = actispred,k,w,b,w1,b1
-
-        if actispred == True:
+        
+        if Fullcycle.Probability() == True:
             print (f' ACCURATE == PREDICTED   TRUE   K: {k}   \n') 
             accuratepredictions+=1
-            #break 
 
-    accuracy = accuratepredictions / up_to # len (trainingset) # change to len (testingset) when running testing set.    
+        Fullcycle.CEntropyderivative()  # array,labeltarget # Cross entropy derivative 
+        Fullcycle.CEntropywithsoftchainrule() # Cross entropy & Softmax Chain Rule derivative
+
+        if k!=0:
+            fw,fb,fw1,fb1 = nw,nb,nw1,nb1
+            #print (fb1)
+
+        nw,nb,nw1,nb1 = Fullcycle.errorbackprop(w1,w,b1,k)
+        #print (nb1)
+        w,b,w1,b1,aw,ab,aw1,ab1 = Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,fw,fb,fw1,fb1,aw,ab,aw1,ab1,k,0.9, 0.09 )
+
+        # NEW ONE : 0.01 YEILDS 24 PERCENT FOR 100.
+        # NEW ONE : 0.09 YEILDS 
+
+        # 0.1 yeilds 26 percent for 100. 31.9 percent for 1000 images
+        # NEW ONE : 36 PERCENT FOR 100.
+
+        
+       
+        # 0.2 yields 31 percent for 100. 39.9% for 1000 images. 61 percent for 29,400.
+        # 0.22 yeilds 32 percent for 100. 41.4 percent for 1000 images
+        
+        # 0.23 yeilds 33 percent for 100.  42.9 percent for 1000 images    
+        # NEW ONE: 31 PERCENT FOR 100. 
+        
+        # 0.24 yeilds 32 percent for 100.  yeilds 43.3 percent for 1000
+        # 0.25                             yeilds 42.9 percent for 1000.
+
+
+    accuracy = accuratepredictions / images # len (trainingset) # change to len (testingset) when running testing set.    
     print (f'\n ACCURACY  ::: {accuracy * 100}%')
 
     #print ("hello")
