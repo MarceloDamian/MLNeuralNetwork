@@ -347,8 +347,6 @@ class EpochCycle():
         infinitesmal = float ('-inf')
         undefined = float ('nan')    
 
-        # ! THis is sus too will go back to this to double check. 
-
         for i in range (10):
             #print (f"softmax[i]{softmax[i]}") # check softmax values.if they are all 0 and one of them is 1.00 then its wrong delete that iteration
             if softmax[i] == 0.00000000e+000 or -float(targethotencode[i])/float (softmax[i]) == infinitesmal or -float(targethotencode[i])/float (softmax[i])==undefined or  -float(targethotencode[i])/float (softmax[i]) == -0. : # softmax[i] == 0.00000000e+000 or  ##reduces runtime error issue                
@@ -357,9 +355,6 @@ class EpochCycle():
                 self.crossder = np.append(self.crossder, -float(targethotencode[i])/float (softmax[i]))
 
         #print (f'self.crossder{self.crossder}' )
-        #print (f'new soft.crossder{-targethotencode/softmax}')
-
-        #return -targethotencode/softmax
         return self.crossder
 
 
@@ -439,7 +434,7 @@ class EpochCycle():
 if __name__ == "__main__":
 
     accuratepredictions = 0
-    images = 100
+    images = 29400
 
     ######### initalizing data  #################
     Fullcycle = EpochCycle()  # calls class epoch cycle
@@ -453,9 +448,7 @@ if __name__ == "__main__":
 
     aw,ab,aw1,ab1 = 0,0,0,0
 
-
     for k in range(0,images): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
-
 
         Fullcycle.replacewithrealarray(k) #(3)# read all 42000. For loop. Gets data from index 4         
         Fullcycle.accuratelabel()
@@ -480,31 +473,14 @@ if __name__ == "__main__":
 
         if k!=0:
             fw,fb,fw1,fb1 = nw,nb,nw1,nb1
-            #print (fb1)
 
         nw,nb,nw1,nb1 = Fullcycle.errorbackprop(w1,w,b1,k)
-        #print (nb1)
-        w,b,w1,b1,aw,ab,aw1,ab1 = Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,fw,fb,fw1,fb1,aw,ab,aw1,ab1,k,0.9, 0.09 )
+        w,b,w1,b1,aw,ab,aw1,ab1 = Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,fw,fb,fw1,fb1,aw,ab,aw1,ab1,k,0.9, 0.1)
 
         # NEW ONE : 0.01 YEILDS 24 PERCENT FOR 100.
-        # NEW ONE : 0.09 YEILDS 
-
-        # 0.1 yeilds 26 percent for 100. 31.9 percent for 1000 images
-        # NEW ONE : 36 PERCENT FOR 100.
-
-        
-       
-        # 0.2 yields 31 percent for 100. 39.9% for 1000 images. 61 percent for 29,400.
-        # 0.22 yeilds 32 percent for 100. 41.4 percent for 1000 images
-        
-        # 0.23 yeilds 33 percent for 100.  42.9 percent for 1000 images    
-        # NEW ONE: 31 PERCENT FOR 100. 
-        
-        # 0.24 yeilds 32 percent for 100.  yeilds 43.3 percent for 1000
-        # 0.25                             yeilds 42.9 percent for 1000.
-
+        # NEW ONE : 0.09 YEILDS 33 PERCENT FOR 100.
+        # NEW ONE : 0.10 YEILDS 36 PERCENT FOR 100. For 29,400 it yeilds 80.227%
+        # NEW ONE : 0.11 YEILDS 35 PERCENT FOR 100.
 
     accuracy = accuratepredictions / images # len (trainingset) # change to len (testingset) when running testing set.    
     print (f'\n ACCURACY  ::: {accuracy * 100}%')
-
-    #print ("hello")
