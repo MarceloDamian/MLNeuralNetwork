@@ -1,5 +1,7 @@
 
 ## To run models:
+  - No API's Needed !! 
+  - Latest version of python.
 
 #### To run multi Classifier:
 1. Change directory to Multi-Class_Neural_Network
