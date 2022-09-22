@@ -20,7 +20,6 @@ class Sequential():
 
     def weightsandbiases(self,layernodes):
 
-        #print (layernodes) # 0,1 #784,533,10 # 1,2
         dynamicwandb = ()
         for i in range (0,len(layernodes)-1):
             np.random.seed (i)  # size(sets, nodes)
@@ -28,18 +27,6 @@ class Sequential():
             np.random.seed(i)
             b = np.random.uniform(size=(layernodes[i+1],1),low = 0, high= 1) * 0   # very small biases #b = np.random.uniform(size=(533,1),low = -1, high= 1) * np.sqrt(2 / 533) 
             dynamicwandb += (w,b,)            
-                #np.random.seed (0)  # size(sets, nodes)
-                #w = np.random.uniform(size=(layernodes[1],layernodes[0]),low = -1, high= 1) * np.sqrt(2 / layernodes[0]) #maybe change to -1 as low 
-                #np.random.seed(0)
-                #b = np.random.uniform(size=(layernodes[1],1),low = 0, high= 1) * 0   # very small biases #b = np.random.uniform(size=(533,1),low = -1, high= 1) * np.sqrt(2 / 533) 
-                ##################################################################################################################
-                #np.random.seed (1)
-                #w1 = np.random.uniform(size=(layernodes[2],layernodes[1]),low = -1, high= 1) * np.sqrt(2 / layernodes[1])#maybe change to -1 as low 
-                #np.random.seed(1)
-                #print (w1)
-                #b1 = np.random.uniform(size=(layernodes[2],1),low = 0, high= 1) * 0  # very small biases # b1 = np.random.uniform(size=(10,1),low = -1, high= 1) *  np.sqrt(2 / 10) 
-                #return w,b,w1,b1
-
         return dynamicwandb
 
     def shuffledtrain(self):
@@ -77,11 +64,9 @@ class Sequential():
         
         return self.dotprod
 
-
     def LeakyRelU(self,VALUE, First_Layer): # perhaps I pass the prev output in here
         array = copy.deepcopy(First_Layer) # this is essential as it was getting pdrelu instead
         self.output= np.maximum(VALUE,array)
-        #!print (f'Relu {self.output}')
         return self.output
     
     def D_LeakyRelU(self,VALUE):
@@ -95,11 +80,9 @@ class Sequential():
         return self.derivrelu
     
     def Softmax(self,Second_Layer): #! still needs fixing  
-        # ! The problem is the weights.It was learning to fast thus a smaller learning rate
         array = copy.deepcopy(Second_Layer) # this is essential as it was getting pdrelu instead
         self.softmaxlist =  np.exp(array) / sum(np.exp(array))
         self.softmaxlist = self.softmaxlist.reshape(1,10)[0] 
-        #!print (f'Softmax: {self.softmaxlist}')
         return self.softmaxlist
 
     def D_Softmax(self):
@@ -152,18 +135,15 @@ class Sequential():
         correctlabel_ = copy.deepcopy(self.label) # this is essential as it was getting pdrelu instead        
         sftarray = copy.deepcopy(self.softmaxlist) # this is essential as it was getting pdrelu instead
         predlabel = np.argmax(sftarray)
-
-        Y_ = int (correctlabel_)
-        YPred_ = int (predlabel)
         correctpred_= 0 
         
         for i in range (10):
-            if i==Y_:
+            if i==int (correctlabel_):
                 correctpred_ = sftarray[i]
         
-        print (f'\nCORRECT LABEL::: {Y_}  PREDICTED LABEL:::  {YPred_}  Probability Of Correct Label :::  {correctpred_ * 100} %\n')
+        print (f'\nCORRECT LABEL::: {int (correctlabel_)}  PREDICTED LABEL:::  {int (predlabel)}  Probability Of Correct Label :::  {correctpred_ * 100} %\n')
 
-        if ((Y_==YPred_) == True ):
+        if ((int (correctlabel_)==int (predlabel)) == True ):
             amtcorrect+=1
             print (f'          TRUE: K: {k} Score: {amtcorrect/Images * 100}%   \n') 
             
@@ -195,7 +175,7 @@ class Sequential():
         return self.loss 
 
     def Backward_Prop(self,layernodes,ogweightw1,ogweight,ogbiasb1):
-        
+
         pixels = copy.deepcopy(self.scaledarray) # this is essential as it was getting pdrelu instead
         reludone = copy.deepcopy(self.output) # this is essential as it was getting pdrelu instead
         loss = copy.deepcopy(self.loss) # this is essential as it was getting pdrelu instead
@@ -214,21 +194,12 @@ class Sequential():
 
     def GradientDescentWithMomentum(self,w,b,w1,b1,nw,nb,nw1,nb1,prevnw,prevnb,prevnw1,prevnb1,alterdw,alterdb,alterdw1,alterdb1,mu,lr):
          
-        deltaw = (lr * nw) 
-        deltab = (lr * nb) 
-        deltaw1 = (lr * nw1) 
-        deltab1 = (lr * nb1) 
-        
         if k==0:        
-            neww = w - deltaw
-            newb = b - deltab    #b - (nb * learnrate)
-            neww1 = w1 - deltaw1 #w1 - (nw1 * learnrate) 
-            newb1 = b1 - deltab1 #b1 - (nb1 * learnrate)
-
-            alterdw = neww
-            alterdb = newb
-            alterdw1 = neww1
-            alterdb1 = newb1
+            neww = w - (lr * nw) 
+            newb = b - (lr * nb)     #b - (nb * learnrate)
+            neww1 = w1 - (lr * nw1)  #w1 - (nw1 * learnrate) 
+            newb1 = b1 - (lr * nb1)  #b1 - (nb1 * learnrate)
+            alterdw,alterdb,alterdw1,alterdb1 = neww, newb, neww1, newb1
         else:
 
             alterdw = lr * prevnw + mu * alterdw# this is the prevalterdw
@@ -259,11 +230,11 @@ if __name__ == "__main__":
     for k in range(0,Images): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
         imgs_ = nn.ImageArray() # K is passed through all of these functions.     
         ########################### Starting Forward Prop ###########################
-        L1 = nn.Linear(Nodes[0],Nodes[1],imgs_,w,b)
+        L1 = nn.Linear( Nodes[0],Nodes[1], imgs_,w,b)
         LRelu = nn.LeakyRelU(L1,0.01)  
         nn.D_LeakyRelU(0.01)
         
-        L2 = nn.Linear(Nodes[1],Nodes[2],LRelu,w1,b1)
+        L2 = nn.Linear( Nodes[1],Nodes[2], LRelu,w1,b1)
         nn.Softmax(L2) 
         ######################### Starting Backward Prop #########################
         nn.D_Softmax() # SOFTMAX partial derivatives or gradients
@@ -280,6 +251,8 @@ if __name__ == "__main__":
 
     accuracy = t / Images # len (trainingset) # change to len (testingset) when running testing set.    
     print (f'\n ACCURACY  ::: {accuracy * 100}%')
+
+
 
     # NEW ONE : 0.01 YEILDS 24 PERCENT FOR 100.
     # NEW ONE : 0.09 YEILDS 33 PERCENT FOR 100.
