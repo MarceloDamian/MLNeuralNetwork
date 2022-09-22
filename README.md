@@ -1,5 +1,6 @@
 
 ## To run models:
 
-1. To run mutli classifier change directory to Multi-Class_Neural_Network
+## To run mutli classifier:
+1. Change directory to Multi-Class_Neural_Network
 2. Run python3 neuralnet.py in your environment.
