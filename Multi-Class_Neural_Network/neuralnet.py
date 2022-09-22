@@ -5,8 +5,18 @@ import random
 import copy
 from sklearn.utils import shuffle
 
-class EpochCycle():
+class Sequential():
+
+    def initial_deltas(self):
+
+        fw = np.zeros((533,784)) # change these to its own function called init.
+        fb = np.zeros((533,1))
+        fw1 = np.zeros((533,10))
+        fb1 = np.zeros((10,1))
+        aw,ab,aw1,ab1 = 0,0,0,0
     
+        return fw,fb,fw1,fb1,aw,ab,aw1,ab1
+
     def weightsandbiases(self):
 
         np.random.seed (0)  # size(sets, nodes)
@@ -31,7 +41,7 @@ class EpochCycle():
             writer = csv.writer(f)
             writer.writerows(shuffleddata)
 
-    def replacewithrealarray(self, rnumber): # replaces with one picture from real array 
+    def ImageArray(self, rnumber): # replaces with one picture from real array 
         
         numpyarray = np.array([])
 
@@ -46,22 +56,8 @@ class EpochCycle():
             numpyarray = np.append (numpyarray, list(map(float, pixels)) ) # map characthers as integers
             self.scaledarray =  numpyarray/255
         return self.scaledarray # full image is established in nested list. Divided by 255 to get value under 1.
-    
-    def accuratelabel(self):
-        return self.label
-    
-    def gentargetlabel(self,target):
-        return target
-    
-    def replacerowwithrand(self):
-        self.insidenest = np.random.uniform(size=(1,784),low = 0, high= 256) 
-        np.random.seed(0)
-        return self.insidenest[0]
 
-    def randomsum(self, randomarray):
-        return np.sum (randomarray)
-
-    def inductivedotproductl0tol1 (self, inductweights, inductbiases):
+    def Linearl0tol1 (self, inductweights, inductbiases):
         arrayofpixels = copy.deepcopy(self.scaledarray) # this is essential as it was getting pdrelu instead
         npinsertarr = arrayofpixels.reshape(784,1) # reduced this was next line : npinsertarr = npinsertarr.reshape(784,1)
         #! change mutliplication to dot because it isnt supposed to just get multiplied 
@@ -71,152 +67,15 @@ class EpochCycle():
         #print ("Actual:  ",self.inductivebeforerelu)
         return self.inductivebeforerelu
 
-    def originalweightsl0tol1 (self):
-        return self.saveweightsl0tol1
-
-    def originalbiasesl0tol1 (self):
-        return self.savebiasesl0to1
-
-    def averageofsupersum (self, neuron):
-
-        with open('./sumdp.csv', 'r') as csv_file:
-            csvreader = csv.reader(csv_file)
-
-            for data in csvreader:
-                #print (f'data [0]  {data[0]}')
-                #print (f'neuron [0]  {neuron}')
-                if data[0]==str(neuron) and str(neuron)=='0':
-                    avgdot = int(data[1]) / 4132
-                    return avgdot
-                elif data[0]==str(neuron) and str(neuron)=='1':                        
-                    avgdot = int(data[1]) / 4684
-                    return avgdot
-                elif data[0]==str(neuron) and str(neuron)=='2':                        
-                    avgdot = int(data[1]) / 4177
-                    return avgdot
-                elif data[0]==str(neuron) and str(neuron)=='3':                        
-                    avgdot = int(data[1]) / 4351
-                    return avgdot
-                elif data[0]==str(neuron) and str(neuron)=='4':                        
-                    avgdot = int(data[1]) / 4072
-                    return avgdot
-                elif data[0]==str(neuron) and str(neuron)=='5':   
-                    avgdot = int(data[1]) / 3795
-                    return avgdot
-                elif data[0]==str(neuron) and str(neuron)=='6':                        
-                    avgdot = int(data[1]) / 4137
-                    return avgdot
-                elif data[0]==str(neuron) and str(neuron)=='7':                        
-                    avgdot = int(data[1]) / 4401
-                    return avgdot
-                elif data[0]==str(neuron) and str(neuron)=='8':                        
-                    avgdot = int(data[1]) / 4063
-                    return avgdot
-                elif data[0]==str(neuron) and str(neuron)=='9':                        
-                    avgdot = int(data[1]) / 4188
-                    return avgdot
-    
-    def imagetargeted (self, imagenumber):
-
-        rnumber = 0
-        storeimage = np.array([])
-
-        if imagenumber == 0 :
-            rnumber = random.randint(2, 4133)
-        elif imagenumber == 1 :
-            rnumber = random.randint(4134, 8817)
-        elif imagenumber == 2 :
-            rnumber = random.randint(8818, 12994)
-        elif imagenumber == 3:
-            rnumber = random.randint(12995, 17345)      
-        elif imagenumber == 4:
-            rnumber = random.randint(17346, 21417)    
-        elif imagenumber == 5:
-             rnumber = random.randint(21418, 25212) 
-        elif imagenumber == 6:
-            rnumber = random.randint(25213, 29349) 
-        elif imagenumber == 7:
-            rnumber = random.randint(29350, 33750)
-        elif imagenumber == 8:
-            rnumber = random.randint(33751, 37813)    
-        elif imagenumber == 9:
-            rnumber = random.randint(37814, 42001)
-        
-
-        with open('./newreorg.csv', 'r') as csv_file: # probably changed to train.csv
-            csvreader = csv.reader(csv_file) # loads data into csv reader
-            next(csvreader) # skips pixelnumbers skips 0 
-            for index, row in enumerate(csvreader): # enumerates file into indexes
-               if index==rnumber:  # Load image at row given
-                    pixels = row[2:] # for newreorg skips 0 as enumerate, skips 1 as label
-                    #storeimage = np.append (storeimage, pixels)
-                    break
-        
-        storeimage = np.append (storeimage, list(map(int, pixels)) ) # map characthers as integers
-
-        return storeimage # use this to reflect image.
-
-    def RELU(self): # perhaps I pass the prev output in here
+    def LeakyRelU(self,VALUE): # perhaps I pass the prev output in here
         array = copy.deepcopy(self.inductivebeforerelu) # this is essential as it was getting pdrelu instead
-        self.output= np.maximum(0.01,array)
+        self.output= np.maximum(VALUE,array)
         #!print (f'Relu {self.output}')
         return self.output
     
-    def maxRELUvalue(self):
-        array = copy.deepcopy(self.output) # this is essential as it was getting pdrelu instead
-        self.maxreluval = np.max(array)  
-        return self.maxreluval  
-
-    def positionofmaxRELUvalue(self,apprelu_,targetsum_):
-
-        argmax_= np.argmax(apprelu_)
-        return argmax_ 
-    
-    def maxreluafterdot(self,weights,biases,posomaxrelu):
-
-        neededweights  = weights[posomaxrelu].reshape(1,784) # reverse engineered     
-        
-        return neededweights[0]
-
-    def newimage(self,modweights,randomimg):
-        image = randomimg * modweights
-        
-        return image # to run image run python3 showimg.py
-
-    def mappingwithvalues (self,imagegen,posoftarget_):
-        
-        desiredimage = np.array ([])
-
-        for i, k in zip(imagegen, posoftarget_):
-            #print(f'{i} -> {k}')
-            if k == 0 :
-                i = 0 #i * 0.05
-            elif k!=0:
-                i = i
-            desiredimage = np.append (desiredimage,i)
-
-        desiredimage = desiredimage.reshape(1,784)
-
-        return desiredimage[0]
-
-    def imageabsoluteloss (self,targetsum,imggen ):
-        absoluterror =  targetsum - sum(imggen)
-        print (f'sum of generated image ::: {sum(imggen)}')
-        return absoluterror
-
-    def writeimage(self,desiredimage):
-    
-        data = [desiredimage]
-
-        with open('printimage.csv', 'w', encoding='UTF8', newline='') as f: 
-            writer = csv.writer(f)
-            writer.writerows(data)
-        return data
-        
-    def PDRELU(self):
-
+    def D_LeakyRelU(self,VALUE):
         copyofrelu = copy.deepcopy(self.output) # this is essential as it was getting pdrelu instead
-        copyofrelu[copyofrelu<=0.01] = 0
+        copyofrelu[copyofrelu<=VALUE] = 0
         copyofrelu[copyofrelu>0] = 1
         self.derivrelu = copyofrelu
 
@@ -224,7 +83,7 @@ class EpochCycle():
 
         return self.derivrelu
     
-    def inductivedotproductl1tol2 (self, inductweightsl1, inductbiasesl1):
+    def Linearl1tol2 (self, inductweightsl1, inductbiasesl1):
         
         array = copy.deepcopy(self.output) # this is essential as it was getting pdrelu instead
         #print (self.output)
@@ -236,21 +95,15 @@ class EpochCycle():
 
         return self.inductiveAFTERRelu
 
-    def originalweightsl1tol2(self):
-        return self.saveweightsl1tol2
-
-    def originalbiasesl1tol2(self):
-        return self.savebiasesl2tol1
-       
     def Softmax(self): #! still needs fixing  
-    # ! The problem is the weights.It was learning to fast thus a smaller learning rate
+        # ! The problem is the weights.It was learning to fast thus a smaller learning rate
         array = copy.deepcopy(self.inductiveAFTERRelu) # this is essential as it was getting pdrelu instead
         self.softmaxlist =  np.exp(array) / sum(np.exp(array))
         self.softmaxlist = self.softmaxlist.reshape(1,10)[0] 
         #!print (f'Softmax: {self.softmaxlist}')
         return self.softmaxlist
 
-    def Softmaxpartialderivatives(self):
+    def D_Softmax(self):
         array = copy.deepcopy(self.softmaxlist) # this is essential as it was getting pdrelu instead
         soft = array.reshape(10,1)#,1)
         self.partials = np.diagflat(soft) - np.dot(soft, soft.T)
@@ -286,48 +139,23 @@ class EpochCycle():
     def Hotencode (self, desired):
         return np.eye(10,dtype="float")[desired] 
 
-    def SoftmaxHotencode (self):
-        array = copy.deepcopy(self.softmaxlist) # this is essential as it was getting pdrelu instead
-        self.predlabel = np.argmax(array)
-        newarray = self.Hotencode(self.predlabel)
-
-        return newarray
-
-    def derivativeMAE (self,relu, yreal ):
-        
-        lossarray = np.array([])
-
-        for i in range (len(relu)):
-            if relu[i]==yreal:
-                lossarray= np.append(lossarray, 0) # not differntialable. 
-            elif relu[i] > yreal:
-                lossarray= np.append (lossarray, -1)
-            elif relu[i] < yreal:
-                lossarray= np.append (lossarray, 1)
-        
-        return lossarray
-
-    def Cross_entropy(self) :
-        
+    def CCELoss(self) :
+        print (self.label)
         correctlabel_ = copy.deepcopy(self.label) # this is essential as it was getting pdrelu instead        
         array = copy.deepcopy(self.softmaxlist) # this is essential as it was getting pdrelu instead
         nphotencode = self.Hotencode( int (correctlabel_)) #self.Hotencode(intlabel).reshape(10)  
         self.crossentropyarray = np.sum(-nphotencode*np.log(array))
-
-        #print (f'Crossentr:::  {self.crossentropyarray}') 
+        print (f"CROSS ENTROPY: {self.crossentropyarray}")
         return self.crossentropyarray 
-
-    def maxcrossentropy (self):
-        self.maxnum = np.max(self.crossentropyarray)    
-        print (f'CROSS ENTROPY::::: {self.maxnum}')
-        return self.maxnum  
     
     def Probability(self):  # pred = something new , y = label
     
         correctlabel_ = copy.deepcopy(self.label) # this is essential as it was getting pdrelu instead        
         sftarray = copy.deepcopy(self.softmaxlist) # this is essential as it was getting pdrelu instead
+        predlabel = np.argmax(sftarray)
+
         Y_ = int (correctlabel_)
-        YPred_ = int (self.predlabel)
+        YPred_ = int (predlabel)
         correctpred_= 0 
         
         for i in range (10):
@@ -338,7 +166,7 @@ class EpochCycle():
 
         return (Y_==YPred_)#,Y_, YPred_, correctpred_ # cross entropy, if they are equal, 
 
-    def CEntropyderivative(self):
+    def D_CCELoss(self):
         correctlabel_ = copy.deepcopy(self.label) # this is essential as it was getting pdrelu instead        
         softmax = copy.deepcopy(self.softmaxlist) # this is essential as it was getting pdrelu instead
         self.crossder = np.array ([])        
@@ -357,14 +185,13 @@ class EpochCycle():
         #print (f'self.crossder{self.crossder}' )
         return self.crossder
 
-
-    def CEntropywithsoftchainrule (self):
+    def D_CCE_and_Softmax (self):
         crossder_ = copy.deepcopy(self.crossder) # this is essential as it was getting pdrelu instead
         softpartials_ = copy.deepcopy(self.partials) # this is essential as it was getting pdrelu instead
         self.loss = crossder_ @ softpartials_ 
         return self.loss 
 
-    def errorbackprop(self,ogweightw1,ogweight,ogbiasb1,kth):
+    def Backward_Prop(self,ogweightw1,ogweight,ogbiasb1,kth):
 
         pixels = copy.deepcopy(self.scaledarray) # this is essential as it was getting pdrelu instead
         reludone = copy.deepcopy(self.output) # this is essential as it was getting pdrelu instead
@@ -382,20 +209,8 @@ class EpochCycle():
     
         return nw,nb,nw1,nb1 # change these to self after adding momentum 
 
-    def updatewandb(self,w,b,w1,b1,nw,nb,nw1,nb1,prevnw,prevnb,prevnw1,prevnb1,alterdw,alterdb,alterdw1,alterdb1,kth,mu,lr):
-     
-        # w = w – change_x  # what you have 
-        # change_x = lr * nw
-        #############################################
-
-        #change_x(t) = lr * nw(t-1) + mu * (lr * nw)o(t-1)   # what you want. Desired
-        
-        #w(t) = w(t-1) – change_x(t)
-        ###Done: ### w(0) =  w - (nw * lr)
+    def GradientDescentWithMomentum(self,w,b,w1,b1,nw,nb,nw1,nb1,prevnw,prevnb,prevnw1,prevnb1,alterdw,alterdb,alterdw1,alterdb1,kth,mu,lr):
          
-        # We need the previous lr value. 
-        # We need the previous weight or bias. 
-        # we need to set a condition for w(0)
         deltaw = (lr * nw) 
         deltab = (lr * nb) 
         deltaw1 = (lr * nw1) 
@@ -422,65 +237,52 @@ class EpochCycle():
             neww1 = w1 - alterdw1
             newb1 = b1 - alterdb1
 
-        #    lr = 0.23
-
-        #change_x(t) = lr * nw(t-1) + mu * (lr * nw)o(t-1)   # what you want. Desired
-        
-        #w(t) = w(t-1) – change_x(t)
-
-        return neww,newb,neww1,newb1, alterdw, alterdb,alterdw1,alterdb1
+        return neww,newb,neww1,newb1,alterdw,alterdb,alterdw1,alterdb1 
 
     
 if __name__ == "__main__":
 
+    ######### Initalizing data  #################
     accuratepredictions = 0
-    images = 29400
+    images = 100 #29400 # training at 80 percent for 29,400 images. 
 
-    ######### initalizing data  #################
-    Fullcycle = EpochCycle()  # calls class epoch cycle
-    w,b,w1,b1 = Fullcycle.weightsandbiases()
+    ################# Model #####################
+    nn = Sequential()  # calls class epoch cycle
 
-    fw = np.zeros((533,784))
-    fb = np.zeros((533,1))
-
-    fw1 = np.zeros((533,10))
-    fb1 = np.zeros((10,1))
-
-    aw,ab,aw1,ab1 = 0,0,0,0
+    fw,fb,fw1,fb1,aw,ab,aw1,ab1  = nn.initial_deltas()
+    w,b,w1,b1 = nn.weightsandbiases()
 
     for k in range(0,images): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
 
-        Fullcycle.replacewithrealarray(k) #(3)# read all 42000. For loop. Gets data from index 4         
-        Fullcycle.accuratelabel()
-        ########################### Starting Forward Prop ###########################
-        Fullcycle.inductivedotproductl0tol1(w,b)   #position  = Fullcycle.RELU (randomarr) # for position purposes
-        Fullcycle.RELU()  # After Relu. zero to 1 connections complete with act.
-        Fullcycle.PDRELU() 
-        Fullcycle.inductivedotproductl1tol2(w1,b1) # !changed
-        Fullcycle.Softmax() # After Softmax. 1 to 2 connections complete with activation.
-        ######################### Starting Backward Prop #########################
-        Fullcycle.Softmaxpartialderivatives() # Softmax partial derivatives or gradients
-        Fullcycle.SoftmaxHotencode() 
-        Fullcycle.Cross_entropy() # array,labeltarget # Cross entropy on Softmax
-        Fullcycle.maxcrossentropy() # NEEDED TO PRINT
+        nn.ImageArray(k) #(3)# read all 42000. For loop. Gets data from index 4         
         
-        if Fullcycle.Probability() == True:
-            print (f' ACCURATE == PREDICTED   TRUE   K: {k}   \n') 
+        ########################### Starting Forward Prop ###########################
+        nn.Linearl0tol1(w,b)  
+        nn.LeakyRelU(0.01)  
+        nn.D_LeakyRelU(0.01) 
+        nn.Linearl1tol2(w1,b1) 
+        nn.Softmax() 
+
+        ######################### Starting Backward Prop #########################
+        nn.D_Softmax() # SOFTMAX partial derivatives or gradients
+        nn.CCELoss() # array,labeltarget # Cross entropy on SOFTMAX  
+        
+        if nn.Probability() == True:
+            print (f' ACCURATE == PREDICTED  TRUE   K: {k}   \n') 
             accuratepredictions+=1
 
-        Fullcycle.CEntropyderivative()  # array,labeltarget # Cross entropy derivative 
-        Fullcycle.CEntropywithsoftchainrule() # Cross entropy & Softmax Chain Rule derivative
+        nn.D_CCELoss()  # array,labeltarget # Cross entropy derivative 
+        nn.D_CCE_and_Softmax() # Cross entropy & SOFTMAX Chain Rule derivative
 
         if k!=0:
-            fw,fb,fw1,fb1 = nw,nb,nw1,nb1
-
-        nw,nb,nw1,nb1 = Fullcycle.errorbackprop(w1,w,b1,k)
-        w,b,w1,b1,aw,ab,aw1,ab1 = Fullcycle.updatewandb(w,b,w1,b1,nw,nb,nw1,nb1,fw,fb,fw1,fb1,aw,ab,aw1,ab1,k,0.9, 0.1)
-
-        # NEW ONE : 0.01 YEILDS 24 PERCENT FOR 100.
-        # NEW ONE : 0.09 YEILDS 33 PERCENT FOR 100.
-        # NEW ONE : 0.10 YEILDS 36 PERCENT FOR 100. For 29,400 it yeilds 80.227%
-        # NEW ONE : 0.11 YEILDS 35 PERCENT FOR 100.
+            fw,fb,fw1,fb1 = nw,nb,nw1,nb1 
+        
+        nw,nb,nw1,nb1 = nn.Backward_Prop(w1,w,b1,k)
+        w,b,w1,b1,aw,ab,aw1,ab1 = nn.GradientDescentWithMomentum(w,b,w1,b1,nw,nb,nw1,nb1,fw,fb,fw1,fb1,aw,ab,aw1,ab1,k,0.9, 0.1)
 
     accuracy = accuratepredictions / images # len (trainingset) # change to len (testingset) when running testing set.    
     print (f'\n ACCURACY  ::: {accuracy * 100}%')
+    # NEW ONE : 0.01 YEILDS 24 PERCENT FOR 100.
+    # NEW ONE : 0.09 YEILDS 33 PERCENT FOR 100.
+    # NEW ONE : 0.10 YEILDS 36 PERCENT FOR 100. For 29,400 it yeilds 80.227%
+    # NEW ONE : 0.11 YEILDS 35 PERCENT FOR 100.
