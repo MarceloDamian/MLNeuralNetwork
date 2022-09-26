@@ -8,7 +8,7 @@ import string
 
 class Sequential():
 
-    def init_delta(self, ):
+    def init_delta(self):
         variables = (len(Nodes)-1) * 2  # the amount of pw's and aw's plus t, 1 , to count the score. 
         repeat = []  # Empty tuple.
         for i in range (variables):
@@ -46,18 +46,15 @@ class Sequential():
                if index==k:  # Load image at row given
                     pixels = row[1:] # for train.csv ignores or skips over the 0th column  
                     self.label = row[0] #! These are the labels of train.csv 
-            
-            numpyarray = np.append (numpyarray, list(map(float, pixels)) ) # map characthers as integers
-            self.scaledarray = numpyarray/255
+            self.scaledarray = np.append (numpyarray, list(map(float, pixels))) / 255 # map characthers as integers
         return self.scaledarray # full image is established in nested list. Divided by 255 to get value under 1.
 
     def Linear(self,layer2nodes,layer3nodes,arraymapped,w_,b_):
-        
+
         npinsertarr = np.array(arraymapped).reshape(layer2nodes,1) # reduced this was next line : npinsertarr = npinsertarr.reshape(784,1)       
-        dotprod = (np.dot (w_, npinsertarr) ) + b_
-        dotprod = dotprod.reshape(layer3nodes)
+        dotprod = (np.dot (w_, npinsertarr) ) + b_        
         
-        return dotprod
+        return dotprod.reshape(layer3nodes) 
 
     def LeakyRelU(self,First_Layer,VALUE): # perhaps I pass the prev output in here 
         return np.maximum(VALUE,First_Layer)
@@ -66,13 +63,11 @@ class Sequential():
         return np.greater(PREVLEAKY, VALUE).astype(int)
     
     def Softmax(self,Second_Layer): #! still needs fixing  
-
         self.softmaxlist =  np.exp(Second_Layer) / sum(np.exp(Second_Layer))
-        self.softmaxlist = self.softmaxlist.reshape(1,10)[0] 
-        return self.softmaxlist
+        return self.softmaxlist.reshape(1,10)[0]
 
     def D_Softmax(self):
-        soft = self.softmaxlist.reshape(10,1)
+        soft = self.softmaxlist.reshape(Nodes[2],1)
         self.partials = np.diagflat(soft) - np.dot(soft, soft.T)
         return self.partials
 
@@ -85,22 +80,17 @@ class Sequential():
         print (f"CROSS ENTROPY: {self.crossentropyarray}")
         return self.crossentropyarray 
 
-    def Score(self,amtcorrect):  # pred = something new , y = label
-    
-        predlabel = np.argmax(self.softmaxlist)
-        percentpred_= 0 
-        
-        for i in range (10):
-            if i == int(self.label):
-                percentpred_ = self.softmaxlist[i]
+    def Score(self, t_):  # pred = something new , y = label
+
+        predlabel = np.argmax(self.softmaxlist)      
+        percentpred_ = self.softmaxlist[int(self.label)]
+        acuratebool = (int(self.label)==int (predlabel))
 
         print (f'\nCORRECT LABEL::: {int (self.label)}  PREDICTED LABEL:::  {int (predlabel)}  Probability Of Correct Label :::  {percentpred_ * 100} %\n')
+        t_= t+1 if acuratebool==True else t_  
+        print (f'\t\t\tTRUE: K: {k} Score: {t_/Images * 100}%\t\n') if acuratebool==True else 0
 
-        if ((int (self.label)==int (predlabel)) == True ):
-            amtcorrect+=1
-            print (f'          TRUE: K: {k} Score: {amtcorrect/Images * 100}%   \n') 
-            
-        return amtcorrect
+        return t_
 
     def D_CCELoss(self):
 
@@ -111,13 +101,13 @@ class Sequential():
 
         for i in range (10):
             DCCE = -float(targethotencode[i])/float (self.softmaxlist[i])
-            if DCCE == (infinitesmal or undefined or -0.) : # 0.00000000e+000or  ##reduces runtime error issue                
+            if DCCE == (infinitesmal or undefined or -0.) :               
                 self.crossder = np.append (self.crossder, 0.00)
             else:
                 self.crossder = np.append(self.crossder, -float(targethotencode[i])/float (self.softmaxlist[i]))
         
         return self.crossder
-
+ 
     def D_CCE_and_Softmax (self):
         self.loss = self.crossder @ self.partials 
         return self.loss 
@@ -135,19 +125,21 @@ class Sequential():
                       
         return self.neww,self.newb
 
-    def Backward_Prop(self,PREVLEAKY,DL1Relu):
+    def Backward_Prop(self,LEAKYRELU,DL1Relu):
 
         #reludone = copy.deepcopy(PREVLEAKY) # this is essential as it was getting pdrelu instead
         #drelu = copy.deepcopy(DL1Relu) # this is essential as it was getting pdrelu instead
         
-        # Softmax to Relu 
-        w1loss  = np.dot (self.loss.reshape(Nodes[2],1), PREVLEAKY.reshape(1,Nodes[1])) 
-        nw1 = w1loss.reshape(Nodes[2],Nodes[1]) * 1/(k+1)  
-        nb1 = np.sum(nw1,1).reshape(Nodes[2],1) * 1/(k+1)  
         # Relu To Pixels
-        wloss = np.dot (self.loss.reshape(1,Nodes[2]), WandB[2].reshape(Nodes[2],Nodes[1])) * DL1Relu           
-        nw = np.dot (wloss.reshape(Nodes[1],1), self.scaledarray.reshape(1,Nodes[0])) * 1/(k+1)
+        Wloss = np.dot (self.loss.reshape(1,Nodes[2]), WandB[2].reshape(Nodes[2],Nodes[1])) * DL1Relu           
+        nw = np.dot (Wloss.reshape(Nodes[1],1), self.scaledarray.reshape(1,Nodes[0])) * 1/(k+1)
         nb = np.sum(nw.reshape(Nodes[1],Nodes[0]),1).reshape(Nodes[1],1) * 1/(k+1)
+        
+        # Softmax to Relu 
+        W1loss  = np.dot (self.loss.reshape(Nodes[2],1), LEAKYRELU.reshape(1,Nodes[1])) 
+        nw1 = W1loss.reshape(Nodes[2],Nodes[1]) * 1/(k+1)  
+        nb1 = np.sum(nw1,1).reshape(Nodes[2],1) * 1/(k+1)  
+
         #wloss2 = np.dot (self.loss.reshape(1,Nodes[2]), WandB[4].reshape(Nodes[2],Nodes[2])) * DL1Relu           
         #self.neww = np.dot (wloss2.reshape(Nodes[2],1), self.scaledarray.reshape(1,Nodes[1])) * 1/(k+1)
         #self.newb = np.sum(self.neww.reshape(Nodes[2],Nodes[1]),1).reshape(Nodes[2],1) * 1/(k+1) 
@@ -178,10 +170,9 @@ if __name__ == "__main__":
     WandB = nn.weightsandbiases() # Both of these dynamically grow.
 
     t = 0
-    Images = 100     #29400 # training at 81 percent for 29,400 images. 
+    Images = 10     #29400 # training at 81 percent for 29,400 images. 
     Momentum = 0.9
     Learning_Rate = 0.1
-
 
     for k in range(0,Images): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
         
@@ -189,6 +180,7 @@ if __name__ == "__main__":
         ########################### Starting Forward Prop ###########################
         
         L1 = nn.Linear( Nodes[0], Nodes[1], imgs_,WandB[0],WandB[1])
+
         L1Relu = nn.LeakyRelU(L1,0.01)  
         DL1Relu = nn.D_LeakyRelU(L1Relu,0.01)
         ######################### Starting Backward Prop #########################
