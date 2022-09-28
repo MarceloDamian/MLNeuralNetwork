@@ -11,7 +11,7 @@ class Sequential():
     def init_var(self):
         return [0] * (MaxConnects * 2)
     def init_hiddenlayers(self):
-        return np.empty((len(Nodes)- 2) * 2, dtype=object)
+        return np.empty((len(Nodes)- 2), dtype=object)
     def weightsandbiases(self):
         dynamicwandb = []
         for i in range (0,MaxConnects):
@@ -100,35 +100,31 @@ class Sequential():
         self.loss = self.crossder @ self.partials 
         return self.loss 
 
-    def Backward_Prop(self,ACTIV_DERIV):#leakyrelu, DL1Relu, Lastleakyrelu, Dl2Relu):
+    def Backward_Prop(self,ACTIV,DERIV):#leakyrelu, DL1Relu, Lastleakyrelu, Dl2Relu):
     
-        hiddenlayers = len(Nodes) - 2 
+        hiddenlayers = len(Nodes) - 2 #print (MaxConnects)#print (hiddenlayers)
 
-        if len(Nodes) == 3: # minimum Num of hidden layers
-        # For other images 
-            wloss = np.dot (self.loss.reshape(1,Nodes[MaxConnects]), WandB[2].reshape(Nodes[MaxConnects],Nodes[MaxConnects-1])) * ACTIV_DERIV[hiddenlayers]
-            LayerWandB[0] = wloss.reshape(Nodes[1],1)  * self.scaledarray.reshape(1,Nodes[0]) * 1/(k+1) # 533,784
-            LayerWandB[1] = np.sum(LayerWandB[0],1).reshape(Nodes[1],1) * 1/(k+1) # 533,1
-            hiddenlayers = hiddenlayers - 1 
-        else: 
-        # soft to Relu to Relu To Pixels #! alter this
+        wloss = np.dot (self.loss.reshape(1,Nodes[MaxConnects]), WandB[hiddenlayers*2].reshape(Nodes[MaxConnects],Nodes[MaxConnects-1])) * DERIV[hiddenlayers-1]
+ 
+        if hiddenlayers > 1:
+
+            #! DEBUG THIS USING COMMENTS ON THE SHAPE OF THEM.
+            for j in range (len(Nodes)-3):
+
+                wloss  = np.dot (wloss.reshape(1,Nodes[MaxConnects-1]),  WandB[int(len(Nodes)/2)].reshape(Nodes[MaxConnects-1],Nodes[MaxConnects-2]) ) * DERIV[j] # 1,533
+                newwloss = np.dot (self.loss.reshape(1,Nodes[MaxConnects]),WandB[4].reshape(Nodes[MaxConnects],Nodes[MaxConnects-1])) * DERIV[j+1] # 1,356
+                
+                LayerWandB[MaxConnects-1]= newwloss.reshape (Nodes[MaxConnects-1],1) * ACTIV[j].reshape(1, Nodes[MaxConnects-2]) * 1/(k+1)# 356,533
+                LayerWandB[MaxConnects] = np.sum(LayerWandB[MaxConnects-1],1).reshape(Nodes[MaxConnects-1],1) * 1/(k+1)# 356,1
         
-            nextw = np.dot (self.loss.reshape(1,Nodes[MaxConnects]), WandB[len(Nodes)].reshape(Nodes[MaxConnects],Nodes[MaxConnects-1])) * ACTIV_DERIV[len(Nodes)-1] # 1,356
-            nextwloss = nextw.reshape(Nodes[MaxConnects-1],1) # 356,1
-            wloss  = np.dot (nextwloss.reshape(1,Nodes[MaxConnects-1]),  WandB[int(len(Nodes)/2)].reshape(Nodes[MaxConnects-1],Nodes[1]) ) * ACTIV_DERIV[len(Nodes)-3] # 1,533
-            ##################### Same Below ############################
-            LayerWandB[0] = wloss.reshape(Nodes[1],1)  * self.scaledarray.reshape(1,Nodes[0]) * 1/(k+1) # 533,784
-            LayerWandB[1] = np.sum(LayerWandB[0],1).reshape(Nodes[1],1) * 1/(k+1) # 533,1
-            ###############################################################
-            newwloss = np.dot (self.loss.reshape(1,Nodes[MaxConnects]),WandB[len(Nodes)].reshape(Nodes[MaxConnects],Nodes[MaxConnects-1])) * ACTIV_DERIV[len(Nodes)-1] # 1,356
-            LayerWandB[2]= newwloss.reshape (Nodes[MaxConnects-1],1) * ACTIV_DERIV[0].reshape(1, Nodes[1])# 356,533
-            LayerWandB[3] = np.sum(LayerWandB[2],1).reshape(Nodes[MaxConnects-1],1) * 1/(k+1)# 356,1
-       
-
+        ##################### Same Below ############################
+        LayerWandB[0] = wloss.reshape(Nodes[1],1)  * self.scaledarray.reshape(1,Nodes[0]) * 1/(k+1) # 533,784
+        LayerWandB[1] = np.sum(LayerWandB[0],1).reshape(Nodes[1],1) * 1/(k+1) # 533,1
+        ###############################################################
 
         # Softmax to Relu 
         ##################### Same Below ############################
-        w1loss  = self.loss.reshape(Nodes[MaxConnects],1) *  ACTIV_DERIV[hiddenlayers].reshape(1,Nodes[MaxConnects-1]) # 3N = 0 , 4N = 2
+        w1loss  = self.loss.reshape(Nodes[MaxConnects],1) *  ACTIV[hiddenlayers-1].reshape(1,Nodes[MaxConnects-1]) # 3N = 0 , 4N = 2
         LayerWandB[AllConnects-2] = w1loss.reshape(Nodes[MaxConnects],Nodes[MaxConnects-1]) * 1/(k+1)  # 10,356
         LayerWandB[AllConnects-1] = np.sum(LayerWandB[AllConnects-2],1).reshape(Nodes[MaxConnects],1) * 1/(k+1)   # 10,1
         ###############################################################
@@ -152,7 +148,11 @@ if __name__ == "__main__":
     ################# Model #####################
     
     #Nodes = (784,533,10) 
-    Nodes = (784,533,356,10)  # Enter node layers here
+    #Nodes = (784,533,356,10)  # Enter node layers here
+    
+    Nodes = (784,533,356,122,10) 
+
+
     MaxConnects = len(Nodes) - 1
     AllConnects = MaxConnects * 2 
 
@@ -160,13 +160,14 @@ if __name__ == "__main__":
     nn = Sequential() 
     Prevvalues, Altvalues, NWandB, OptWandB, LayerWandB = nn.init_var(), nn.init_var(), nn.init_var(), nn.init_var(),nn.init_var()
     WandB = nn.weightsandbiases() # Both of these dynamically grow.
-    ACTIV_DERIV = nn.init_hiddenlayers() 
+    ACTIV = nn.init_hiddenlayers() 
+    DERIV = nn.init_hiddenlayers() 
     
 
     t = 0
     Images = 10     #29400 # training at 81 percent for 29,400 images. 
     Momentum = 0.9
-    Learning_Rate = 0.02 #0.1
+    Learning_Rate = 0.05#0.1#0.05 #0.1
 
     for k in range(0,Images): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
         
@@ -175,18 +176,28 @@ if __name__ == "__main__":
         ########################### Starting Forward Prop ###########################
         L1 = nn.Linear( Nodes[0], Nodes[1], imgs_, WandB[0],WandB[1])
 
-        ACTIV_DERIV[0] = nn.LeakyRelU(L1,0.01)  
-        ACTIV_DERIV[1] = nn.D_LeakyRelU(ACTIV_DERIV[0],0.01)
+        ACTIV[0] = nn.LeakyRelU(L1,0.01)  
+        DERIV[0] = nn.D_LeakyRelU(ACTIV[0],0.01)
         
         ######################### Starting Backward Prop #########################
-        L2 = nn.Linear( Nodes[1], Nodes[2], ACTIV_DERIV[0],WandB[2],WandB[3])
-        ACTIV_DERIV[2] = nn.LeakyRelU(L2,0.01)  
-        ACTIV_DERIV[3] = nn.D_LeakyRelU(ACTIV_DERIV[2],0.01)
+        L2 = nn.Linear( Nodes[1], Nodes[2], ACTIV[0],WandB[2],WandB[3])
+        ACTIV[1] = nn.LeakyRelU(L2,0.01)  
+        DERIV[1] = nn.D_LeakyRelU(ACTIV[1],0.01)
         
-        L3 = nn.Linear( Nodes[2], Nodes[3], ACTIV_DERIV[2], WandB[4],WandB[5])  #! change nodes to 2 and 3 and l1relu to l2relu
+        L3 = nn.Linear( Nodes[2], Nodes[3], ACTIV[1], WandB[4],WandB[5])  #! change nodes to 2 and 3 and l1relu to l2relu
         
-        #L3 = nn.Linear( Nodes[1], Nodes[MaxConnects], ACTIV_DERIV[0], WandB[2],WandB[3])  #! Actual
-        nn.Softmax(L3) 
+        
+        
+        ACTIV[2] = nn.LeakyRelU(L3,0.01)  
+        DERIV[2] = nn.D_LeakyRelU(ACTIV[2],0.01)
+        L4 = nn.Linear( Nodes[3], Nodes[4], ACTIV[2], WandB[6],WandB[7])  #! change nodes to 2 and 3 and l1relu to l2relu
+
+
+
+
+        #L3 = nn.Linear( Nodes[1], Nodes[MaxConnects], ACTIV[0], WandB[2],WandB[3])  #! Actual
+        #nn.Softmax(L3) 
+        nn.Softmax(L4)
         nn.D_Softmax() # SOFTMAX partial derivatives or gradients
         nn.CCELoss() # array,labeltarget # Cross entropy on SOFTMAX  
         t = nn.Score(t)
@@ -195,7 +206,7 @@ if __name__ == "__main__":
 
         Prevvalues = NWandB if k!=0 else 0  # store previous weights and biases. CHANGE TO PLUS AND =.
                
-        NWandB = nn.Backward_Prop ( ACTIV_DERIV )
+        NWandB = nn.Backward_Prop ( ACTIV, DERIV )
         WandB, Altvalues = nn.GradientDescentWithMomentum(Momentum,Learning_Rate)    
 
     accuracy = t / Images # len (trainingset) # change to len (testingset) when running testing set.    
