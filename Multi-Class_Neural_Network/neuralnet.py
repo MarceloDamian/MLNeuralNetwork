@@ -104,32 +104,46 @@ class Sequential():
     
         hiddenlayers = len(Nodes) - 2 #print (MaxConnects)#print (hiddenlayers)
 
-        wloss = np.dot (self.loss.reshape(1,Nodes[MaxConnects]), WandB[hiddenlayers*2].reshape(Nodes[MaxConnects],Nodes[MaxConnects-1])) * DERIV[hiddenlayers-1]
- 
-        if hiddenlayers > 1:
+        print (hiddenlayers, "Hiddenlayers")
+        print (MaxConnects, "MaxConnects")
 
-            #! DEBUG THIS USING COMMENTS ON THE SHAPE OF THEM.
-            for j in range (len(Nodes)-3):
+        #Nodes = (784,533,356,122,10) 0,1,2,3,4
+        #WandB= w,b,w1,b1,w2,b2,w3,b3
+        #w = 533,784 # change these to its own function called init.
+        #b = 533,1
+        #w1 = 356,533
+        #b1 = 356, 1
+        #w2 = 122,356
+        #b2 = 122, 1
+        #w3 = 10,122
+        #b3 = 10,1
 
-                wloss  = np.dot (wloss.reshape(1,Nodes[MaxConnects-1]),  WandB[int(len(Nodes)/2)].reshape(Nodes[MaxConnects-1],Nodes[MaxConnects-2]) ) * DERIV[j] # 1,533
-                newwloss = np.dot (self.loss.reshape(1,Nodes[MaxConnects]),WandB[4].reshape(Nodes[MaxConnects],Nodes[MaxConnects-1])) * DERIV[j+1] # 1,356
-                
-                LayerWandB[MaxConnects-1]= newwloss.reshape (Nodes[MaxConnects-1],1) * ACTIV[j].reshape(1, Nodes[MaxConnects-2]) * 1/(k+1)# 356,533
-                LayerWandB[MaxConnects] = np.sum(LayerWandB[MaxConnects-1],1).reshape(Nodes[MaxConnects-1],1) * 1/(k+1)# 356,1
-        
-        ##################### Same Below ############################
+        # Do 6 layers and comment it out 
+        # Do 5 layers and comment it out. 
+        # Do 4 layers and comment it out         
+        # do 3 layers and comment it out 
+
+        ##################### FOR 6 TOTAL LAYERS ############################
+        #######################################################################
+
+        ##################### FOR 5 TOTAL LAYERS ############################
+        #######################################################################
+
+        ##################### FOR 4 TOTAL LAYERS ############################
+        #######################################################################
+
+        ##################### FOR 3 TOTAL LAYERS ############################
+        wloss = np.dot (self.loss.reshape(1,Nodes[2]), WandB[2].reshape(Nodes[2],Nodes[1])) * DERIV[0]    
         LayerWandB[0] = wloss.reshape(Nodes[1],1)  * self.scaledarray.reshape(1,Nodes[0]) * 1/(k+1) # 533,784
         LayerWandB[1] = np.sum(LayerWandB[0],1).reshape(Nodes[1],1) * 1/(k+1) # 533,1
+        w1loss  = self.loss.reshape(Nodes[2],1) *  ACTIV[0].reshape(1,Nodes[1]) # 3N = 0 , 4N = 2
+        LayerWandB[2] = w1loss.reshape(Nodes[2],Nodes[1]) * 1/(k+1)  # 10,356
+        LayerWandB[3] = np.sum(LayerWandB[2],1).reshape(Nodes[2],1) * 1/(k+1)   # 10,1
         ###############################################################
-
-        # Softmax to Relu 
-        ##################### Same Below ############################
-        w1loss  = self.loss.reshape(Nodes[MaxConnects],1) *  ACTIV[hiddenlayers-1].reshape(1,Nodes[MaxConnects-1]) # 3N = 0 , 4N = 2
-        LayerWandB[AllConnects-2] = w1loss.reshape(Nodes[MaxConnects],Nodes[MaxConnects-1]) * 1/(k+1)  # 10,356
-        LayerWandB[AllConnects-1] = np.sum(LayerWandB[AllConnects-2],1).reshape(Nodes[MaxConnects],1) * 1/(k+1)   # 10,1
-        ###############################################################
-
+        
         return LayerWandB[0: AllConnects]  # self.neww,self.newb,Lastw,Lastb 
+
+
 
     def GradientDescentWithMomentum(self,mu,lr):
 
@@ -145,12 +159,13 @@ class Sequential():
 
 if __name__ == "__main__":
     
+    # So this works for three layers. However, I am attempting to get it to work for 4 layers and essentially making it to do it dynamically.
+
     ################# Model #####################
     
-    #Nodes = (784,533,10) 
+    Nodes = (784,533,10) 
     #Nodes = (784,533,356,10)  # Enter node layers here
-    
-    Nodes = (784,533,356,122,10) 
+    #Nodes = (784,533,356,122,10) 
 
 
     MaxConnects = len(Nodes) - 1
@@ -167,7 +182,7 @@ if __name__ == "__main__":
     t = 0
     Images = 10     #29400 # training at 81 percent for 29,400 images. 
     Momentum = 0.9
-    Learning_Rate = 0.05#0.1#0.05 #0.1
+    Learning_Rate = 0.1# 0.05 #0.1
 
     for k in range(0,Images): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
         
@@ -180,24 +195,24 @@ if __name__ == "__main__":
         DERIV[0] = nn.D_LeakyRelU(ACTIV[0],0.01)
         
         ######################### Starting Backward Prop #########################
-        L2 = nn.Linear( Nodes[1], Nodes[2], ACTIV[0],WandB[2],WandB[3])
-        ACTIV[1] = nn.LeakyRelU(L2,0.01)  
-        DERIV[1] = nn.D_LeakyRelU(ACTIV[1],0.01)
+        #L2 = nn.Linear( Nodes[1], Nodes[2], ACTIV[0],WandB[2],WandB[3])
+        #ACTIV[1] = nn.LeakyRelU(L2,0.01)  
+        #DERIV[1] = nn.D_LeakyRelU(ACTIV[1],0.01)
         
-        L3 = nn.Linear( Nodes[2], Nodes[3], ACTIV[1], WandB[4],WandB[5])  #! change nodes to 2 and 3 and l1relu to l2relu
+        #L3 = nn.Linear( Nodes[2], Nodes[3], ACTIV[1], WandB[4],WandB[5])  #! change nodes to 2 and 3 and l1relu to l2relu
         
         
         
-        ACTIV[2] = nn.LeakyRelU(L3,0.01)  
-        DERIV[2] = nn.D_LeakyRelU(ACTIV[2],0.01)
-        L4 = nn.Linear( Nodes[3], Nodes[4], ACTIV[2], WandB[6],WandB[7])  #! change nodes to 2 and 3 and l1relu to l2relu
+        #ACTIV[2] = nn.LeakyRelU(L3,0.01)  
+        #DERIV[2] = nn.D_LeakyRelU(ACTIV[2],0.01)
+        #L4 = nn.Linear( Nodes[3], Nodes[4], ACTIV[2], WandB[6],WandB[7])  #! change nodes to 2 and 3 and l1relu to l2relu
 
 
 
 
-        #L3 = nn.Linear( Nodes[1], Nodes[MaxConnects], ACTIV[0], WandB[2],WandB[3])  #! Actual
-        #nn.Softmax(L3) 
-        nn.Softmax(L4)
+        L3 = nn.Linear( Nodes[1], Nodes[MaxConnects], ACTIV[0], WandB[2],WandB[3])  #! Actual
+        #nn.Softmax(L4)
+        nn.Softmax(L3) 
         nn.D_Softmax() # SOFTMAX partial derivatives or gradients
         nn.CCELoss() # array,labeltarget # Cross entropy on SOFTMAX  
         t = nn.Score(t)
@@ -255,3 +270,47 @@ if __name__ == "__main__":
         ##print (newlist)
         #return newlist
         #####################################################
+
+
+
+
+
+
+
+
+         # wloss = np.dot (self.loss.reshape(1,Nodes[MaxConnects]), WandB[hiddenlayers*2].reshape(Nodes[MaxConnects],Nodes[MaxConnects-1])) * DERIV[hiddenlayers-1]    
+        # if hiddenlayers > 1:
+
+        #     wloss  = np.dot (wloss.reshape(1,Nodes[MaxConnects-1]),  WandB[hiddenlayers].reshape(Nodes[MaxConnects-1],Nodes[MaxConnects-2]) ) * DERIV[0]#DERIV[1] # 1,533
+
+        #     if hiddenlayers >=3:
+        #         wloss  = np.dot (wloss.reshape(1,Nodes[MaxConnects-2]),  WandB[2].reshape(Nodes[MaxConnects-2],Nodes[MaxConnects-3]) ) * DERIV[0] # 1,533
+
+
+        #     for j in range (2, len(Nodes)-1):# 2 for 2h # 2,3 for 3h  # 2,3,4 for 4h
+
+        #         newwloss = np.dot (self.loss.reshape(1,Nodes[MaxConnects]),WandB[hiddenlayers*2].reshape(Nodes[MaxConnects],Nodes[MaxConnects-1])) * DERIV[len(Nodes)-1 - j] # 1,356
+                
+        #         if j == 2:
+        #             LayerWandB[2]= newwloss.reshape (Nodes[MaxConnects-1],1) * ACTIV[0].reshape(1, Nodes[MaxConnects-2]) * 1/(k+1) # 356,533 # 4
+        #             LayerWandB[3] = np.sum(LayerWandB[2],1).reshape(Nodes[MaxConnects-1],1) * 1/(k+1) # 356,1      # 3 # 2 ,1 
+                
+        #         if j==3:
+        #             LayerWandB[j+1]= newwloss.reshape (Nodes[MaxConnects-1],1) * ACTIV[0].reshape(1, Nodes[MaxConnects-2]) * 1/(k+1) # 356,533 # 4
+                
+        #         if j > 3:
+        #             LayerWandB[j+2]= newwloss.reshape (Nodes[MaxConnects-1],1) * ACTIV[0].reshape(1, Nodes[MaxConnects-2]) * 1/(k+1) # 356,533 # 4
+        #             LayerWandB[j+1] = np.sum(LayerWandB[j+2],1).reshape(Nodes[MaxConnects-1],1) * 1/(k+1) # 356,1      # 3 # 2 ,1 
+            
+        
+        # ##################### Same Below ############################
+        # LayerWandB[0] = wloss.reshape(Nodes[1],1)  * self.scaledarray.reshape(1,Nodes[0]) * 1/(k+1) # 533,784
+        # LayerWandB[1] = np.sum(LayerWandB[0],1).reshape(Nodes[1],1) * 1/(k+1) # 533,1
+        # ###############################################################
+
+        # # Softmax to Relu 
+        # ##################### Same Below ############################
+        # w1loss  = self.loss.reshape(Nodes[MaxConnects],1) *  ACTIV[hiddenlayers-1].reshape(1,Nodes[MaxConnects-1]) # 3N = 0 , 4N = 2
+        # LayerWandB[AllConnects-2] = w1loss.reshape(Nodes[MaxConnects],Nodes[MaxConnects-1]) * 1/(k+1)  # 10,356
+        # LayerWandB[AllConnects-1] = np.sum(LayerWandB[AllConnects-2],1).reshape(Nodes[MaxConnects],1) * 1/(k+1)   # 10,1
+        # ###############################################################
