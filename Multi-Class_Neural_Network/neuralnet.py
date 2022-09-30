@@ -109,13 +109,9 @@ class Sequential():
 
     def Backward_Prop(self,ACTIV,DERIV):#leakyrelu, DL1Relu, Lastleakyrelu, Dl2Relu):
     
-        ArrayIndex = Iter*2-2
-        storearray = ArrayIndex
-        hiddenlayers = len(Nodes) - 2 #print (Iter)#print (hiddenlayers)
-
-        print (hiddenlayers, "Hiddenlayers")
-        print (Iter, "Iter")
-        print (Iter*2, "allconnects")
+        #print (hiddenlayers, "Hiddenlayers")
+        #print (Iter, "Iter")
+        #print (Iter*2, "allconnects")
 
         #Nodes = (784,533,356,122,50,10) 0,1,2,3,4,5
         #WandB= w,b,w1,b1,w2,b2,w3,b3,w4,b4
@@ -132,54 +128,93 @@ class Sequential():
         # Do 6 layers and comment it out 
         
         ##################### FOR ALL LAYERS #############################
-
+        # Something is wrong with this. It isnt yeilding the ouputs I want.
+        ArrayIndex = Iter*2-2
+        storearray = ArrayIndex
+        hiddenlayers = len(Nodes) - 2 #print (Iter)#print (hiddenlayers)
+        clock = 0
+        floor = 2 
 
         wloss = np.dot (self.loss.reshape(1,Nodes[Iter]), WandB[ArrayIndex].reshape(Nodes[Iter],Nodes[Iter-1])) * DERIV[len(Nodes)-3]    
+                    
         for decrement in range (Iter-1, 1, -1 ): # so 4,3,2
-            if len(Nodes) == 3:
-                break
             wloss = np.dot (wloss.reshape(1,Nodes[decrement]), WandB[ArrayIndex-2].reshape(Nodes[decrement],Nodes[decrement-1 ])) * DERIV[decrement-2]    
             ArrayIndex-= 2
-        
+
         LayerWandB[0] = wloss.reshape(Nodes[1],1)  * self.scaledarray.reshape(1,Nodes[0]) * 1/(k+1)
         LayerWandB[1] = np.sum(LayerWandB[0],1).reshape(Nodes[1],1) * 1/(k+1)
-
         ArrayIndex = storearray
 
-        if len(Nodes) != 3:
-            newwloss = np.dot (self.loss.reshape(1,Nodes[Iter]),WandB[ArrayIndex].reshape(Nodes[Iter],Nodes[Iter-1])) * DERIV[len(Nodes)-3] # This is the same one as WLOSS
-
-        for decrement1 in range (Iter-1, 2, -1 ): # so 4,3
-            newwloss = np.dot (newwloss.reshape(1,Nodes[decrement1]),WandB[ArrayIndex-2].reshape(Nodes[decrement1],Nodes[decrement1-1])) * DERIV[decrement1 -2] # prob right        
-            ArrayIndex-= 2
-        
-        ArrayIndex = storearray
-
-        if len(Nodes) != 3:
-            LayerWandB[2]= newwloss.reshape (Nodes[2],1) * ACTIV[0].reshape(1, Nodes[1]) * 1/(k+1) # should be 356,533 not 122,533
-            LayerWandB[3] = np.sum(LayerWandB[2],1).reshape(Nodes[2],1) * 1/(k+1) 
             
-        if len(Nodes) !=3:
-            nloss = np.dot (self.loss.reshape(1,Nodes[Iter]), WandB[ArrayIndex].reshape(Nodes[Iter],Nodes[Iter-1])) * DERIV[len(Nodes)-3]
+        for next in range (2, Iter*2 , 2):# 2,4,6 
+            
+            if len(Nodes)!=3:
+                wloss = np.dot (self.loss.reshape(1,Nodes[Iter]), WandB[ArrayIndex].reshape(Nodes[Iter],Nodes[Iter-1])) * DERIV[len(Nodes)-3]    
+                for decrement in range (Iter-1,floor,-1):# 4,3 and then it did 4. 
+                    wloss = np.dot (wloss.reshape(1,Nodes[decrement]),WandB[ArrayIndex-2].reshape(Nodes[decrement],Nodes[decrement-1])) * DERIV[decrement -2]      
+                    ArrayIndex-= 2
+            if (next == Iter*2-2 ):
+                wloss  = self.loss.reshape(Nodes[len(Nodes)-1],1)  # changed to len(nodes)
+
+            LayerWandB[next]= wloss.reshape (Nodes[next - clock ],1) * ACTIV[clock].reshape(1, Nodes[clock+1]) * 1/(k+1) # should be 356,533 not 122,533
+            LayerWandB[next+1] = np.sum(LayerWandB[next],1).reshape(Nodes[next-clock],1) * 1/(k+1) 
+            #print (clock)
+            floor+=1
+            clock+=1    
+            ArrayIndex = storearray
+        ##############################################################################################################
         
-        for decrement2 in range (Iter-1, 3,-1): # so 4...
-            nloss = np.dot (nloss.reshape(1,Nodes[decrement2]),WandB[6].reshape(Nodes[decrement2],Nodes[decrement2-1])) * DERIV[decrement2-2]
-            ArrayIndex-= 2
-        
-        ArrayIndex = storearray
+            # w1loss  = self.loss.reshape(Nodes[5],1) 
+            # print (w1loss.shape)
+            # LayerWandB[8] = w1loss.reshape(Nodes[5],1) *  ACTIV[3].reshape(1,Nodes[4]) * 1/(k+1) 
+            # LayerWandB[9] = np.sum(LayerWandB[8],1).reshape(Nodes[5],1) * 1/(k+1)  
+            
+            # wloss = np.dot (self.loss.reshape(1,Nodes[Iter]), WandB[ArrayIndex].reshape(Nodes[Iter],Nodes[Iter-1])) * DERIV[len(Nodes)-3]    
+            # # imaginary for loop 
+            # LayerWandB[6] = wloss.reshape(Nodes[4],1) * ACTIV[2].reshape(1, Nodes[3]) * 1/(k+1)  #w2 = 122,356
+            # LayerWandB[7] = np.sum(LayerWandB[6],1).reshape(Nodes[4],1) * 1/(k+1) 
 
-        if len(Nodes) != 3:
-            LayerWandB[4]= nloss.reshape (Nodes[3],1) * ACTIV[1].reshape(1, Nodes[2]) * 1/(k+1)  #w2 = 122,356
-            LayerWandB[5] = np.sum(LayerWandB[4],1).reshape(Nodes[3],1) * 1/(k+1) # 356,1      # 3 # 2 ,1 
 
-        if len(Nodes) != 3:
-            otherloss = np.dot (self.loss.reshape(1,Nodes[Iter]), WandB[ArrayIndex].reshape(Nodes[Iter],Nodes[Iter-1])) * DERIV[len(Nodes)-3]
-            LayerWandB[6] = otherloss.reshape(Nodes[4],1) * ACTIV[2].reshape(1, Nodes[3]) * 1/(k+1)  #w2 = 122,356
-            LayerWandB[7] = np.sum(LayerWandB[6],1).reshape(Nodes[4],1) * 1/(k+1) 
+            # if len(Nodes) > 3:
+        #     for next in range (2, Iter*2 -2 , 2): # 2,4,6 
+        #     #LayerWandB[next]= newwloss.reshape (Nodes[next - clock ],1) * ACTIV[clock].reshape(1, Nodes[clock+1]) * 1/(k+1) # should be 356,533 not 122,533
+        #     #LayerWandB[next+1] = np.sum(LayerWandB[next],1).reshape(Nodes[next-clock],1) * 1/(k+1)                 
+        #     clock+=1
+            
+            # wloss = np.dot (self.loss.reshape(1,Nodes[Iter]), WandB[ArrayIndex].reshape(Nodes[Iter],Nodes[Iter-1])) * DERIV[len(Nodes)-3]    
+            # for decrement in range (Iter-1, 1, -1 ): # so 4,3,2
+            #     wloss = np.dot (wloss.reshape(1,Nodes[decrement]), WandB[ArrayIndex-2].reshape(Nodes[decrement],Nodes[decrement-1 ])) * DERIV[decrement-2]    
+            #     ArrayIndex-= 2
 
-        w1loss  = self.loss.reshape(Nodes[5],1) *  ACTIV[3].reshape(1,Nodes[4])
-        LayerWandB[8] = w1loss.reshape(Nodes[5],Nodes[4]) * 1/(k+1) 
-        LayerWandB[9] = np.sum(LayerWandB[8],1).reshape(Nodes[5],1) * 1/(k+1)  
+            # LayerWandB[0] = wloss.reshape(Nodes[1],1)  * self.scaledarray.reshape(1,Nodes[0]) * 1/(k+1)
+            # LayerWandB[1] = np.sum(LayerWandB[0],1).reshape(Nodes[1],1) * 1/(k+1)
+            # ArrayIndex = storearray
+            
+            # wloss = np.dot (self.loss.reshape(1,Nodes[Iter]), WandB[ArrayIndex].reshape(Nodes[Iter],Nodes[Iter-1])) * DERIV[len(Nodes)-3]    
+            # for decrement in range (Iter-1,2,-1):# 4,3
+            #     wloss = np.dot (wloss.reshape(1,Nodes[decrement]),WandB[ArrayIndex-2].reshape(Nodes[decrement],Nodes[decrement-1])) * DERIV[decrement -2]      
+            #     ArrayIndex-= 2
+
+            # LayerWandB[2]= wloss.reshape (Nodes[2],1) * ACTIV[0].reshape(1, Nodes[1]) * 1/(k+1) # 356,533 # 4
+            # LayerWandB[3] = np.sum(LayerWandB[2],1).reshape(Nodes[2],1)
+            # ArrayIndex = storearray
+            
+            # wloss = np.dot (self.loss.reshape(1,Nodes[Iter]), WandB[ArrayIndex].reshape(Nodes[Iter],Nodes[Iter-1])) * DERIV[len(Nodes)-3]    
+            # for decrement in range (Iter-1,3,-1):# 4
+            #         wloss = np.dot (wloss.reshape(1,Nodes[decrement]),WandB[ArrayIndex-2].reshape(Nodes[decrement],Nodes[decrement-1])) * DERIV[decrement-2]
+            #         ArrayIndex-= 2
+
+            # LayerWandB[4]= wloss.reshape (Nodes[3],1) * ACTIV[1].reshape(1, Nodes[2]) * 1/(k+1)  #w2 = 122,356
+            # LayerWandB[5] = np.sum(LayerWandB[4],1).reshape(Nodes[3],1) * 1/(k+1) # 356,1      # 3 # 2 ,1 
+            # ArrayIndex = storearray
+            
+            # wloss = np.dot (self.loss.reshape(1,Nodes[Iter]), WandB[ArrayIndex].reshape(Nodes[Iter],Nodes[Iter-1])) * DERIV[len(Nodes)-3]    
+            # # imaginary for loop 
+            # LayerWandB[6] = wloss.reshape(Nodes[4],1) * ACTIV[2].reshape(1, Nodes[3]) * 1/(k+1)  #w2 = 122,356
+            # LayerWandB[7] = np.sum(LayerWandB[6],1).reshape(Nodes[4],1) * 1/(k+1) 
+            # w1loss  = self.loss.reshape(Nodes[5],1) *  ACTIV[3].reshape(1,Nodes[4])
+            # LayerWandB[8] = w1loss.reshape(Nodes[5],Nodes[4]) * 1/(k+1) 
+            # LayerWandB[9] = np.sum(LayerWandB[8],1).reshape(Nodes[5],1) * 1/(k+1)  
         #######################################################################
 
         ##################### FOR 6 TOTAL LAYERS #############################
@@ -266,7 +301,6 @@ class Sequential():
 
         for i in range (len(Nodes) + hiddenlayers):  # 0,1,2,3 
             if k==0:
-                print (i)
                 OptWandB[i] = WandB[i] - (lr * NWandB[i])
                 Altvalues[i] = OptWandB[i]
             else:
@@ -281,13 +315,13 @@ class Sequential():
 
 if __name__ == "__main__":
     
-    # So this works for three layers. However, I am attempting to get it to work for 4 layers and essentially making it to do it dynamically.
+    # Something is off with the accuracy 
 
     ################# Model #####################
-    
-    #Nodes = (784,533,10) 
-    #Nodes = (784,533,356,10)  # Enter node layers here
-    Nodes = (784,533,356,122,10) 
+    Nodes= (784,10)
+    #Nodes = (784,533,10)  #Checks out for this one. 
+    #Nodes = (784,533,356,10) # Checks out for this one. 
+    #Nodes = (784,533,356,122,10) # Checks out for this one. 
     #Nodes = (784,533,356,122,50,10)
 
     Iter = len(Nodes) - 1
@@ -304,7 +338,7 @@ if __name__ == "__main__":
     t = 0
     Images = 10     #29400 # training at 81 percent for 29,400 images. 
     Momentum = 0.9
-    Learning_Rate = 0.001#0.05#0.1# 0.05 #0.1
+    Learning_Rate =0.001#0.05#0.1# 0.05 #0.1
     #0.001 for 6 layers produces the best results. 
 
     for k in range(0,Images): #trainingset:  # loops through images. 90 sec = 10 images image 0 and forward 
@@ -322,27 +356,26 @@ if __name__ == "__main__":
         ACTIV[1] = nn.LeakyRelU(L2,0.01)  
         DERIV[1] = nn.D_LeakyRelU(ACTIV[1],0.01)
         
-        L3 = nn.Linear( Nodes[2], Nodes[3], ACTIV[1], WandB[4],WandB[5])  #! change nodes to 2 and 3 and l1relu to l2relu
+        # #L3 = nn.Linear( Nodes[1], Nodes[Iter], ACTIV[0], WandB[2],WandB[3])  #! 3 Layers Actual
+
+        # L3 = nn.Linear( Nodes[2], Nodes[3], ACTIV[1], WandB[4],WandB[5])  #! change nodes to 2 and 3 and l1relu to l2relu
         
         
         
-        ACTIV[2] = nn.LeakyRelU(L3,0.01)  
-        DERIV[2] = nn.D_LeakyRelU(ACTIV[2],0.01)
+        # ACTIV[2] = nn.LeakyRelU(L3,0.01)  
+        # DERIV[2] = nn.D_LeakyRelU(ACTIV[2],0.01)
         
-        #print (WandB[6].shape, "success")
+        # #print (WandB[6].shape, "success")
 
 
-        L4 = nn.Linear( Nodes[3], Nodes[4], ACTIV[2], WandB[6],WandB[7])  #! change nodes to 2 and 3 and l1relu to l2relu
+        # L4 = nn.Linear( Nodes[3], Nodes[4], ACTIV[2], WandB[6],WandB[7])  #! change nodes to 2 and 3 and l1relu to l2relu
 
-        #ACTIV[3] = nn.LeakyRelU(L4,0.01)  
-        #DERIV[3] = nn.D_LeakyRelU(ACTIV[3],0.01)
+        # ACTIV[3] = nn.LeakyRelU(L4,0.01)  
+        # DERIV[3] = nn.D_LeakyRelU(ACTIV[3],0.01)
+        # L5 = nn.Linear( Nodes[4], Nodes[5], ACTIV[3], WandB[8],WandB[9])  #! change nodes to 2 and 3 and l1relu to l2relu
 
-        #L5 = nn.Linear( Nodes[4], Nodes[5], ACTIV[3], WandB[8],WandB[9])  #! change nodes to 2 and 3 and l1relu to l2relu
-
-
-        #L3 = nn.Linear( Nodes[1], Nodes[Iter], ACTIV[0], WandB[2],WandB[3])  #! Actual
-        #nn.Softmax(L3) 
-        nn.Softmax(L4)
+        nn.Softmax(L3) 
+        #nn.Softmax(L4)
         #nn.Softmax(L5)
         nn.D_Softmax() # SOFTMAX partial derivatives or gradients
         nn.CCELoss() # array,labeltarget # Cross entropy on SOFTMAX  
