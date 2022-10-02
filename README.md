@@ -9,6 +9,9 @@
 
 #### To run Binary Classifier:
 
+In progress...
 
 #### To run Convolutional Neural Network:
+
+In progress...
 
