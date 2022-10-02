@@ -130,42 +130,42 @@ class Sequential():
 if __name__ == "__main__":
     
     ################# Model #####################
-    Nodes = (784,533,10)  # Feel free to add as many layers. Each number represents amount of nodes in its respected layer.
-    Iter_Index, Hiddenlayers = len(Nodes) - 1, len(Nodes) - 2
+    Nodes = (784,533,10)  # Feel free to add as many layers. Each number represents amount of nodes in its respected layer. (layer0,layer1,...layeri)
+    Iter_Index, Hiddenlayers = len(Nodes) - 1, len(Nodes) - 2 # To index arrays. Amount of hidden layers.
 
-    nn = Sequential() 
-    Prevvalues, Altvalues, NWandB, OptWandB, LayerWandB = nn.init_var(), nn.init_var(), nn.init_var(), nn.init_var(),nn.init_var()
-    ACTIV,DERIV = nn.init_hiddenlayers(), nn.init_hiddenlayers() 
-    WandB = nn.weightsandbiases() 
+    nn = Sequential() # Class name. 
+    Prevvalues, Altvalues, NWandB, OptWandB, LayerWandB = nn.init_var(), nn.init_var(), nn.init_var(), nn.init_var(),nn.init_var() # initailizes variables to 0.
+    ACTIV,DERIV = nn.init_hiddenlayers(), nn.init_hiddenlayers() # Initializes activ = activation function, deriv = derivative of activation function to 0. 
+    WandB = nn.weightsandbiases() # He's intialization for weights and biases
     
     #Images = 35700 # Training dataset 80 percent o 42,000
     #Images = 35700,42001 # 3600 images Test dataset 20 percent o 42,000
     Images = 10 
     range_ = range(Images)
     
-    t = 0
-    Momentum = 0.9
-    Learning_Rate =0.1
+    t = 0 # tracks score
+    Momentum = 0.9 # Momentum's defult is 0.9
+    Learning_Rate =0.1 # Best learning rate for 3 layer nn is 0.1. Smaller for more layers
 
     for k in range_: 
 
-        imgs_ = nn.ImageArray()    
+        imgs_ = nn.ImageArray()    # images mapped by rgb values 255.
         
-        L1 = nn.Linear( Nodes[0], Nodes[1], imgs_, WandB[0],WandB[1])
-        ACTIV[0] = nn.LeakyRelU(L1,0.01)  
-        DERIV[0] = nn.D_LeakyRelU(ACTIV[0],0.01)
+        L0 = nn.Linear( Nodes[0], Nodes[1], imgs_, WandB[0],WandB[1]) # dot prod on weights and biases. WANDB[even] = weights, WANDB[ODD] = biases,
+        ACTIV[0] = nn.LeakyRelU(L0,0.01)  # ACTIV = activation function. Starting at index 0.
+        DERIV[0] = nn.D_LeakyRelU(ACTIV[0],0.01) # Deriv  = Derivative of activation function.  Starting at index 0.
         
-        L2 = nn.Linear( Nodes[1], Nodes[2], ACTIV[0],WandB[2],WandB[3])
+        L1 = nn.Linear( Nodes[1], Nodes[2], ACTIV[0],WandB[2],WandB[3])
 
-        nn.Softmax(L2) 
-        nn.C_CrossEntropyLoss()
-        t = nn.Score(t)
+        nn.Softmax(L1) # Numerically stable Softmax function of previous layer
+        nn.C_CrossEntropyLoss() # Numerically Stable Loss/Cost function 
+        t = nn.Score(t) # SCORE
 
-        Prevvalues = NWandB if k!=0 else 0 
-        NWandB = nn.Backward_Prop ( ACTIV, DERIV )
-        WandB, Altvalues = nn.GradientDescentWithMomentum(Momentum,Learning_Rate)   
+        Prevvalues = NWandB if k!=0 else 0  # Gathers previous weights and biases for momentum.
+        NWandB = nn.Backward_Prop ( ACTIV, DERIV ) # Backward propagation. 
+        WandB, Altvalues = nn.GradientDescentWithMomentum(Momentum,Learning_Rate)  # Optimization function with given momentum and learning rate. 
 
-    accuracy = t / Images 
+    accuracy = t / Images  # True positive + True negative / All images. Accuracy score.
     print (f'\n ACCURACY  ::: {accuracy * 100}%')
 
     # Learning rate : 0.10 YEILDS 36 PERCENT FOR 100. For 29,400 it yeilds 80.227% For a 3 Layer NN. (784,533,10)
