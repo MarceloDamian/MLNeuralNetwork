@@ -7,5 +7,5 @@
 1. Change directory to Multi-Class_Neural_Network
 2. Run python3 neuralnet.py in your environment.
 
-<img src = "https://github.com/MarceloDamian/MLNeuralNetwork/blob/main/mlnn.HEIC" width= "1000"/>
+<img src = "https://github.com/MarceloDamian/MLNeuralNetwork/blob/main/mlnn.png" width= "1000"/>
 
