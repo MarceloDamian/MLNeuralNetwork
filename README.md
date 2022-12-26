@@ -7,11 +7,5 @@
 1. Change directory to Multi-Class_Neural_Network
 2. Run python3 neuralnet.py in your environment.
 
-#### To run Binary Classifier:
-
-In progress...
-
-#### To run Convolutional Neural Network:
-
-In progress...
+<img src = "" width= "1000"/>
 
