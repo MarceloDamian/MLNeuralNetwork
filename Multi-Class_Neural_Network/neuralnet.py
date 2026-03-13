@@ -124,7 +124,6 @@ class Sequential():
             else:
                 Altvalues[i] = lr * Prevvalues[i] + mu * Altvalues[i] # adds momentum using previous values and updates accordingly. 
                 OptWandB[i] = WandB[i] - Altvalues[i]  # gradient descent. 
-
         return OptWandB, Altvalues # Altvalues are values previous passed over using momentum except for the first iteration. 
 
 if __name__ == "__main__":
@@ -140,7 +139,9 @@ if __name__ == "__main__":
     
     #Images = 35700 # Training dataset 80 percent o 42,000
     #Images = 35700,42001 # 3600 images Test dataset 20 percent o 42,000
-    Images = 10 
+    
+    Images = 10 # Change Image Count to improve model and accuracy.
+    
     range_ = range(Images)
     
     t = 0 # tracks score
